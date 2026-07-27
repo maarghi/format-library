@@ -1,0 +1,570 @@
+<title>Format Library — Viral LinkedIn Formats</title>
+<style>
+  *{box-sizing:border-box}
+  /* Virio identity — cream ground, warm ink, gold accent, earthy funnel hues.
+     Committed to Virio's single cream world (same in light & dark viewers). */
+  :root, :root[data-theme="light"], :root[data-theme="dark"]{
+    --paper:#FFF9ED; --paper-2:#F4EDD9; --card:#FFFDF8; --card-2:#F8F1DF;
+    --ink:#1B1B18; --ink-2:#565349; --ink-3:#8A8A86; --line:#E7DEC8; --line-2:#D8CDB2;
+    --tofu:#476D73; --mofu:#7D7730; --bofu:#CF5E32; --abm:#2C4347; --gold:#D5B473;
+    --shadow:rgba(27,27,24,.10); --shadow-lg:rgba(27,27,24,.18);
+    --sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,monospace;
+    --serif:"Times New Roman",Georgia,serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#FFF9ED; --paper-2:#F4EDD9; --card:#FFFDF8; --card-2:#F8F1DF;
+      --ink:#1B1B18; --ink-2:#565349; --ink-3:#8A8A86; --line:#E7DEC8; --line-2:#D8CDB2;
+      --tofu:#476D73; --mofu:#7D7730; --bofu:#CF5E32; --abm:#2C4347; --gold:#D5B473;
+      --shadow:rgba(27,27,24,.10); --shadow-lg:rgba(27,27,24,.18);
+    }
+  }
+
+  [data-stage="TOFU"]{--stage:var(--tofu)}
+  [data-stage="MOFU"]{--stage:var(--mofu)}
+  [data-stage="BOFU"]{--stage:var(--bofu)}
+  [data-stage="ABM"]{--stage:var(--abm)}
+
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  /* Virio grain overlay */
+  body::before{content:"";position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:.055;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  a{color:inherit}
+  button{font-family:inherit;cursor:pointer}
+  .mono{font-family:var(--mono)}
+
+  /* ---------- shell ---------- */
+  .app{display:grid;grid-template-columns:312px 1fr;min-height:100vh;max-width:1500px;margin:0 auto}
+  .rail{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;
+    background:var(--paper-2);border-right:1px solid var(--line);
+    padding:22px 20px 28px;display:flex;flex-direction:column;gap:22px}
+  .main{padding:26px 30px 80px;min-width:0}
+
+  /* ---------- masthead ---------- */
+  .brand{display:flex;flex-direction:column;gap:4px}
+  .brand h1{margin:0;font-size:23px;font-weight:800;letter-spacing:-.02em;line-height:1.02}
+  .brand .sub{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+  .brand .rule{height:3px;width:44px;background:var(--gold);margin-top:6px}
+
+  .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-3);margin:0 0 8px}
+
+  /* ---------- funnel filter ---------- */
+  .stages{display:flex;flex-direction:column;gap:6px}
+  .stage-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+    background:transparent;border:1px solid transparent;border-radius:9px;padding:8px 10px;
+    color:var(--ink-2);transition:background .12s,border-color .12s,color .12s}
+  .stage-btn:hover{background:var(--card)}
+  .stage-btn .dot{width:9px;height:9px;border-radius:50%;background:var(--stage,var(--ink-3));flex:none}
+  .stage-btn .nm{font-weight:600;font-size:13.5px;color:var(--ink);flex:1;letter-spacing:.01em}
+  .stage-btn .ct{font-family:var(--mono);font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .stage-btn[aria-pressed="true"]{background:var(--card);border-color:var(--line-2)}
+  .stage-btn[aria-pressed="true"]{box-shadow:inset 3px 0 0 var(--stage,var(--ink))}
+  .stage-btn .job{display:none}
+
+  /* ---------- segmented (library) ---------- */
+  .seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:3px;gap:3px}
+  .seg button{flex:1;border:0;background:transparent;color:var(--ink-2);font-size:11.5px;font-weight:600;
+    padding:7px 2px;border-radius:6px;letter-spacing:0;white-space:nowrap}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+
+  /* ---------- inputs ---------- */
+  .field{display:flex;flex-direction:column;gap:7px}
+  select,textarea,.search input{width:100%;background:var(--card);color:var(--ink);
+    border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:13px;padding:9px 11px}
+  select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--ink-3) 50%),linear-gradient(135deg,var(--ink-3) 50%,transparent 50%);
+    background-position:calc(100% - 16px) 55%,calc(100% - 11px) 55%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:30px}
+  textarea{resize:vertical;min-height:82px;line-height:1.45}
+  .search{position:relative}
+  .hint{font-size:11px;color:var(--ink-3);line-height:1.4}
+  .hint b{color:var(--ink-2);font-weight:600}
+
+  /* ---------- deal button ---------- */
+  .deal{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+    background:var(--ink);color:var(--paper);border:0;border-radius:11px;padding:14px;
+    font-size:15px;font-weight:700;letter-spacing:.01em;box-shadow:0 2px 0 var(--line-2);
+    transition:transform .08s}
+  .deal:hover{transform:translateY(-1px)}
+  .deal:active{transform:translateY(1px);box-shadow:0 0 0 var(--line-2)}
+  .deal .die{font-size:18px;line-height:1}
+  .deal small{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;
+    text-transform:uppercase;opacity:.7;font-weight:500;margin-top:2px}
+
+  /* ---------- main header ---------- */
+  .mhead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+  .mhead .count{font-family:var(--mono);font-size:12px;color:var(--ink-3);letter-spacing:.04em}
+  .mhead .count b{color:var(--ink);font-size:13px}
+  .searchwrap{position:relative;min-width:230px;flex:1;max-width:360px}
+  .searchwrap input{width:100%;background:var(--card);color:var(--ink);border:1px solid var(--line);
+    border-radius:9px;font-size:13px;padding:9px 12px 9px 32px;font-family:inherit}
+  .searchwrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--ink-3)}
+
+  /* ---------- deck grid ---------- */
+  .deck{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:14px}
+  .fcard{position:relative;text-align:left;background:var(--card);border:1px solid var(--line);
+    border-radius:13px;padding:15px 15px 14px;display:flex;flex-direction:column;gap:9px;
+    min-height:172px;transition:transform .1s,box-shadow .12s,border-color .12s;overflow:hidden}
+  .fcard::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--stage)}
+  .fcard:hover{transform:translateY(-3px);box-shadow:0 8px 22px var(--shadow);border-color:var(--line-2)}
+  .fcard:focus-visible{outline:2px solid var(--stage);outline-offset:2px}
+  .fcard .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .tag{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--stage);border:1px solid var(--stage);border-radius:5px;padding:2px 6px;line-height:1.3}
+  .lib{font-family:var(--mono);font-size:9.5px;color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase}
+  .fcard h3{margin:0;font-size:16.5px;font-weight:800;letter-spacing:-.015em;line-height:1.12;text-wrap:balance}
+  .fcard .arch{font-size:12px;color:var(--ink-2);line-height:1.38;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .fcard .hook{margin-top:auto;font-family:var(--serif);font-size:12.5px;font-style:italic;color:var(--ink-3);
+    line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+    padding-top:9px;border-top:1px dashed var(--line)}
+  .empty{padding:60px 20px;text-align:center;color:var(--ink-3);font-size:14px}
+  .fcard.linkonly{border-style:dashed}
+  .fcard .arch.muted{color:var(--ink-3)}
+  .fcard .hook.openhint{font-style:normal;font-family:var(--mono);font-size:10px;letter-spacing:.05em;
+    text-transform:uppercase;color:var(--stage);border-top-color:var(--stage)}
+  .linknote{font-size:13px;color:var(--ink-2);line-height:1.5;margin:0 0 14px}
+
+  /* label filter chips (sidebar) */
+  .labelchips{display:flex;flex-wrap:wrap;gap:6px}
+  .lchip{display:inline-flex;align-items:center;gap:5px;background:var(--card);color:var(--ink-2);
+    border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;
+    transition:background .12s,border-color .12s,color .12s}
+  .lchip:hover{border-color:var(--line-2);color:var(--ink)}
+  .lchip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .lchip .lct{font-family:var(--mono);font-size:10px;opacity:.65}
+  /* labels/note on cards */
+  .cardmeta{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:2px 0 0}
+  .cardchip{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;
+    color:var(--stage);background:color-mix(in srgb, var(--stage) 12%, transparent);border-radius:5px;padding:2px 6px;line-height:1.4}
+  .cardnote{font-size:11px;color:var(--ink-3);font-style:italic;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* labels/note in modal */
+  .sheetchips{display:flex;flex-wrap:wrap;gap:6px}
+  .sheetchips .cardchip{font-size:10px}
+  .sheetnote{font-family:var(--serif);font-size:14px;font-style:italic;color:var(--ink);line-height:1.5;
+    padding-left:12px;border-left:2px solid var(--stage)}
+  a.openbtn{text-decoration:none}
+
+  /* ---------- modal ---------- */
+  .scrim{position:fixed;inset:0;background:rgba(15,13,10,.55);backdrop-filter:blur(2px);
+    display:none;align-items:flex-start;justify-content:center;padding:36px 20px;z-index:50;overflow-y:auto}
+  .scrim.open{display:flex}
+  .sheet{background:var(--paper);border:1px solid var(--line-2);border-radius:16px;width:100%;max-width:720px;
+    box-shadow:0 30px 70px var(--shadow-lg);overflow:hidden;animation:pop .16s ease-out}
+  @keyframes pop{from{transform:translateY(8px) scale(.99);opacity:0}to{transform:none;opacity:1}}
+  @media (prefers-reduced-motion:reduce){.sheet{animation:none}.deal:hover,.fcard:hover{transform:none}}
+  .sheet .shead{padding:20px 22px 16px;border-bottom:1px solid var(--line);
+    background:var(--card-2);position:relative}
+  .sheet .shead::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--stage)}
+  .sheet .meta-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .sheet h2{margin:0;font-size:23px;font-weight:800;letter-spacing:-.02em;line-height:1.06;text-wrap:balance}
+  .sheet .arch2{margin:6px 0 0;font-size:13px;color:var(--ink-2);line-height:1.45}
+  .close{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink-2);font-size:15px;display:flex;align-items:center;justify-content:center}
+  .close:hover{background:var(--paper-2);color:var(--ink)}
+  .sbody{padding:18px 22px 8px;max-height:none}
+  .block{margin-bottom:18px}
+  .block .lbl{margin-bottom:7px}
+  .hookline{font-family:var(--serif);font-size:14.5px;font-style:italic;color:var(--ink);line-height:1.5;
+    padding-left:12px;border-left:2px solid var(--stage)}
+  ol.skel{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:5px}
+  ol.skel li{font-size:12.5px;color:var(--ink-2);line-height:1.4;padding-left:3px}
+  ol.skel li::marker{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+
+  .post{font-family:var(--serif);font-size:14px;line-height:1.62;color:var(--ink);white-space:pre-wrap;
+    background:var(--card);border:1px solid var(--line);border-radius:11px;padding:16px 17px;
+    max-height:330px;overflow-y:auto}
+  .src{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .src a{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;
+    color:var(--ink-2);background:var(--card);border:1px solid var(--line);border-radius:7px;
+    padding:5px 9px;text-decoration:none;max-width:100%}
+  .src a:hover{border-color:var(--stage);color:var(--ink)}
+  .src a .m{color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* ---------- LinkedIn-native post render (fixed light palette for fidelity) ---------- */
+  .li-post{--li-bg:#fff;--li-text:#1b1f23;--li-muted:#5e6670;--li-line:#e6e9ec;
+    background:var(--li-bg);color:var(--li-text);border:1px solid var(--li-line);border-radius:10px;
+    padding:14px 16px 4px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.10);font-family:var(--sans)}
+  .li-head{display:flex;gap:10px;align-items:flex-start;margin-bottom:9px}
+  .li-ava{width:48px;height:48px;border-radius:50%;flex:none;color:#fff;font-weight:700;font-size:17px;
+    letter-spacing:.02em;display:flex;align-items:center;justify-content:center}
+  .li-idwrap{min-width:0;padding-top:1px}
+  .li-name{font-weight:700;font-size:14.5px;color:var(--li-text);line-height:1.2}
+  .li-sub{font-size:12px;color:var(--li-muted);line-height:1.3;margin-top:1px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:430px}
+  .li-meta{font-size:12px;color:var(--li-muted);margin-top:2px}
+  .li-text{font-size:14px;line-height:1.45;color:var(--li-text);white-space:pre-wrap;word-wrap:break-word}
+  .li-text.clamped{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .li-more{background:none;border:0;color:var(--li-muted);font-weight:600;font-size:14px;padding:3px 0 0;font-family:var(--sans)}
+  .li-more:hover{color:#0a66c2;text-decoration:underline}
+  .li-media{margin:11px -16px 0;border-top:1px solid var(--li-line)}
+  .li-media img{display:block;width:100%;height:auto}
+  .li-stats{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--li-muted);
+    padding:10px 0;margin-top:11px;border-top:1px solid var(--li-line)}
+  .li-reacts{display:inline-flex;align-items:center}
+  .li-reacts .rd{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+    font-size:10px;margin-right:-5px;border:1.5px solid #fff}
+  .li-reacts .n{margin-left:11px;color:var(--li-muted)}
+  .li-actions{display:flex;justify-content:space-around;padding:2px 0 4px;border-top:1px solid var(--li-line)}
+  .li-actions button{display:inline-flex;align-items:center;gap:6px;background:none;border:0;color:#5e6670;
+    font-weight:600;font-size:13px;padding:9px 6px;border-radius:6px;font-family:var(--sans)}
+  .li-actions button:hover{background:#f2f3f5}
+
+  .actions{position:sticky;bottom:0;display:flex;gap:9px;padding:14px 22px 18px;
+    background:linear-gradient(to top,var(--paper) 72%,transparent);flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:7px;border-radius:9px;font-size:13px;font-weight:600;
+    padding:10px 14px;border:1px solid var(--line-2);background:var(--card);color:var(--ink);transition:background .12s,transform .08s}
+  .btn:hover{background:var(--card-2)}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink);flex:1;justify-content:center;min-width:180px}
+  .btn.primary:hover{opacity:.92;background:var(--ink)}
+  .btn svg{flex:none}
+
+  /* ---------- toast ---------- */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(14px);
+    background:var(--ink);color:var(--paper);font-size:13px;font-weight:600;padding:11px 18px;border-radius:10px;
+    box-shadow:0 10px 30px var(--shadow-lg);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:80}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast .em{margin-right:6px}
+
+  @media (max-width:820px){
+    .app{grid-template-columns:1fr}
+    .rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}
+    .main{padding:20px 18px 60px}
+  }
+</style>
+
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <h1>Format&nbsp;Library</h1>
+      <div class="sub">Viral format deck</div>
+      <div class="rule"></div>
+    </div>
+
+    <div>
+      <p class="lbl">Funnel stage</p>
+      <div class="stages" id="stages"></div>
+    </div>
+
+    <div class="field">
+      <p class="lbl">Library</p>
+      <div class="seg" id="libseg">
+        <button data-lib="ALL" aria-pressed="true">All</button>
+        <button data-lib="marghi" aria-pressed="false">Mine</button>
+        <button data-lib="virio" aria-pressed="false">Virio</button>
+        <button data-lib="millies" aria-pressed="false">Millie's</button>
+      </div>
+    </div>
+
+    <div class="field" id="labelfield" style="display:none">
+      <p class="lbl">Label</p>
+      <div class="labelchips" id="labelchips"></div>
+    </div>
+
+    <div class="field">
+      <p class="lbl">Writing for</p>
+      <select id="client">
+        <option value="">— Generic / no client —</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <p class="lbl">Source material <span style="text-transform:none;letter-spacing:0;color:var(--ink-3)">(optional)</span></p>
+      <textarea id="source" placeholder="Paste raw material, a transcript snippet, or a note like: pull from my last Fathom call with this client…"></textarea>
+      <p class="hint"><b>Copy prompt for Claude</b> folds this + the format + your client into a ready-to-run reverse-engineer prompt. Paste it back into Claude, where Fathom &amp; client files live.</p>
+    </div>
+
+    <button class="deal" id="deal">
+      <span class="die">&#127924;</span>
+      <span>Deal me a format<small>random · current filters</small></span>
+    </button>
+  </aside>
+
+  <main class="main">
+    <div class="mhead">
+      <div class="count" id="count"></div>
+      <div class="searchwrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="search" type="search" placeholder="Search formats, hooks, archetypes…" aria-label="Search formats">
+      </div>
+    </div>
+    <div class="deck" id="deck"></div>
+  </main>
+</div>
+
+<div class="scrim" id="scrim" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const FORMATS = /*__FORMATS__*/ [];
+const CLIENTS = ["Arceus","Caspian","Crescendo","Futurify","Goody","Percents"];
+const STAGES = [
+  {key:"ALL",  nm:"All formats", job:""},
+  {key:"TOFU", nm:"TOFU", job:"earn reach with the ICP"},
+  {key:"MOFU", nm:"MOFU", job:"make the problem urgent, the approach credible"},
+  {key:"BOFU", nm:"BOFU", job:"convert existing intent"},
+  {key:"ABM",  nm:"ABM",  job:"make a named target amplify it"},
+];
+
+const state = {stage:"ALL", lib:"ALL", q:"", client:"", source:"", label:null};
+
+const $ = s => document.querySelector(s);
+const deck = $("#deck"), countEl = $("#count");
+
+// ---- client dropdown ----
+const clientSel = $("#client");
+CLIENTS.forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;clientSel.appendChild(o);});
+clientSel.addEventListener("change",e=>state.client=e.target.value);
+
+// ---- source ----
+$("#source").addEventListener("input",e=>state.source=e.target.value);
+
+// ---- stage filter ----
+function stageCount(key){return key==="ALL"?FORMATS.length:FORMATS.filter(f=>f.lane===key).length;}
+const stagesEl = $("#stages");
+STAGES.forEach(s=>{
+  const b=document.createElement("button");
+  b.className="stage-btn"; b.setAttribute("data-stage",s.key);
+  b.setAttribute("aria-pressed", s.key===state.stage);
+  b.innerHTML = `<span class="dot"></span><span class="nm">${s.nm}</span><span class="ct">${stageCount(s.key)}</span>`;
+  b.addEventListener("click",()=>{state.stage=s.key;
+    [...stagesEl.children].forEach(c=>c.setAttribute("aria-pressed", c.getAttribute("data-stage")===s.key));
+    render();});
+  stagesEl.appendChild(b);
+});
+
+// ---- library seg ----
+$("#libseg").addEventListener("click",e=>{
+  const btn=e.target.closest("button"); if(!btn) return;
+  state.lib=btn.dataset.lib;
+  [...$("#libseg").children].forEach(c=>c.setAttribute("aria-pressed", c===btn));
+  render();
+});
+
+// ---- label filter ----
+(function buildLabels(){
+  const counts={};
+  FORMATS.forEach(f=>(f.labels||[]).forEach(l=>{counts[l]=(counts[l]||0)+1;}));
+  const labels=Object.keys(counts).sort((a,b)=>counts[b]-counts[a]||a.localeCompare(b));
+  if(!labels.length) return;
+  const wrap=$("#labelchips"), field=$("#labelfield");
+  field.style.display="";
+  labels.forEach(l=>{
+    const b=document.createElement("button");
+    b.className="lchip"; b.dataset.label=l;
+    b.innerHTML=`${esc(l)} <span class="lct">${counts[l]}</span>`;
+    b.addEventListener("click",()=>{
+      state.label = state.label===l ? null : l;
+      [...wrap.children].forEach(c=>c.setAttribute("aria-pressed", c.dataset.label===state.label));
+      render();
+    });
+    wrap.appendChild(b);
+  });
+})();
+
+// ---- search ----
+$("#search").addEventListener("input",e=>{state.q=e.target.value.toLowerCase().trim();render();});
+
+// ---- filtering ----
+function matches(){
+  return FORMATS.filter(f=>{
+    if(state.stage!=="ALL" && f.lane!==state.stage) return false;
+    if(state.lib!=="ALL" && f.library!==state.lib) return false;
+    if(state.label && !(f.labels||[]).includes(state.label)) return false;
+    if(state.q){
+      const hay=(f.name+" "+f.archetype+" "+f.hook+" "+f.lane+" "+(f.labels||[]).join(" ")+" "+(f.note||"")).toLowerCase();
+      if(!hay.includes(state.q)) return false;
+    }
+    return true;
+  });
+}
+
+// ---- render deck ----
+const libName = l => ({virio:"Virio",millies:"Millie's",marghi:"My list"}[l]||l);
+function render(){
+  const list = matches();
+  countEl.innerHTML = `<b>${list.length}</b> format${list.length===1?"":"s"} in view <span style="color:var(--ink-3)">· ${FORMATS.length} total</span>`;
+  deck.innerHTML="";
+  if(!list.length){deck.innerHTML=`<div class="empty">No formats match those filters. Loosen the stage, library, or search.</div>`;return;}
+  list.forEach(f=>{
+    const c=document.createElement("button");
+    c.className="fcard"+(f.linkOnly?" linkonly":"");
+    c.setAttribute("data-stage",f.lane);
+    const chips=(f.labels||[]).map(l=>`<span class="cardchip">${esc(l)}</span>`).join("");
+    const meta = (chips||f.note)
+      ? `<div class="cardmeta">${chips}${f.note?`<span class="cardnote" title="${esc(f.note)}">📝 ${esc(clip(f.note,40))}</span>`:""}</div>`
+      : "";
+    const body = f.linkOnly
+      ? `<div class="arch muted">In your swipe file — full post lives on LinkedIn</div>
+         ${meta}<div class="hook openhint">Open to read &amp; screenshot ↗</div>`
+      : `<div class="arch">${esc(f.archetype||"")}</div>
+         ${meta}<div class="hook">${esc(clip(f.hook,120))||"&nbsp;"}</div>`;
+    c.innerHTML=`
+      <div class="top"><span class="tag">${f.lane}</span><span class="lib">${libName(f.library)}</span></div>
+      <h3>${esc(f.name)}</h3>
+      ${body}`;
+    c.addEventListener("click",()=>openSheet(f));
+    deck.appendChild(c);
+  });
+}
+
+// ---- deal ----
+$("#deal").addEventListener("click",()=>{
+  const list=matches();
+  if(!list.length){toast("Nothing to deal — loosen your filters","&#9888;&#65039;");return;}
+  openSheet(list[Math.floor(Math.random()*list.length)]);
+});
+
+// ---- modal ----
+const scrim=$("#scrim"), sheet=$("#sheet");
+let activeFormat=null;
+function openSheet(f){
+  activeFormat=f;
+  const skel=(f.skeleton||[]).map(s=>`<li>${esc(s)}</li>`).join("");
+  const src=(f.examples||[]).map(e=>`<a href="${esc(e.url)}" target="_blank" rel="noopener">View original ↗ <span class="m">${esc(clip(e.meta,42))}</span></a>`).join("");
+  const url0 = (f.examples&&f.examples[0]) ? f.examples[0].url : "";
+  const m0 = parseMeta((f.examples&&f.examples[0]?f.examples[0].meta:"")||"");
+  const initials = ((m0.author||"?").split(/\s+/).filter(Boolean).slice(0,2).map(s=>s[0]).join("")||"?").toUpperCase();
+  sheet.setAttribute("data-stage",f.lane);
+  const liPost = `
+    <div class="li-post">
+      <div class="li-head">
+        <div class="li-ava" style="background:var(--stage)">${esc(initials)}</div>
+        <div class="li-idwrap">
+          <div class="li-name">${esc(m0.author||"LinkedIn author")}</div>
+          ${m0.org?`<div class="li-sub">${esc(m0.org)}</div>`:``}
+          <div class="li-meta">${m0.date?esc(m0.date)+" · ":""}&#127760;</div>
+        </div>
+      </div>
+      <div class="li-text clamped" id="litext">${esc(f.example_text||"")}</div>
+      <button class="li-more" id="limore" type="button">&hellip;more</button>
+      ${f.image?`<div class="li-media"><img src="${esc(f.image)}" alt=""></div>`:``}
+      ${(m0.react||m0.comm)?`<div class="li-stats">
+        <span class="li-reacts"><span class="rd" style="background:#0a66c2">&#128077;</span><span class="rd" style="background:#e06847">&#10084;</span><span class="rd" style="background:#d7a029">&#128079;</span><span class="n">${esc(m0.react||"")}</span></span>
+        <span>${m0.comm?esc(m0.comm)+" comments":""}</span>
+      </div>`:``}
+      <div class="li-actions">
+        <button type="button"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 11v9H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1zM7 11l4.2-7.4a1.8 1.8 0 0 1 3.1 1.8L13 10h5.6a2 2 0 0 1 2 2.4l-1.4 6.5a2 2 0 0 1-2 1.6H7"/></svg>Like</button>
+        <button type="button"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.4 8.4 0 0 1-11.9 7.6L3 21l1.9-6A8.4 8.4 0 1 1 21 11.5z"/></svg>Comment</button>
+        <button type="button"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 2l4 4-4 4"/><path d="M3 12V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 12v3a3 3 0 0 1-3 3H3"/></svg>Repost</button>
+        <button type="button"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M22 2 11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>Send</button>
+      </div>
+    </div>`;
+  const labelBlock = (f.labels&&f.labels.length)
+    ? `<div class="block"><p class="lbl">Labels</p><div class="sheetchips">${f.labels.map(l=>`<span class="cardchip">${esc(l)}</span>`).join("")}</div></div>` : "";
+  const noteBlock = f.note
+    ? `<div class="block"><p class="lbl">Note</p><div class="sheetnote">${esc(f.note)}</div></div>` : "";
+  const bodyHtml = f.linkOnly
+    ? `<div class="block">
+         <p class="lbl">Link-only · from your swipe file</p>
+         <p class="linknote">The full post lives on LinkedIn. Open it to read or screenshot, then let Claude reverse-engineer the format — or just copy the prompt below and Claude will read the post itself.</p>
+         ${url0?`<a class="btn primary openbtn" href="${esc(url0)}" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg> Open original post ↗</a>`:""}
+       </div>${labelBlock}${noteBlock}`
+    : `${liPost}
+       ${f.hook?`<div class="block"><p class="lbl">Format hook pattern</p><div class="hookline">${esc(f.hook)}</div></div>`:""}
+       ${skel?`<div class="block"><p class="lbl">Skeleton</p><ol class="skel">${skel}</ol></div>`:""}
+       ${src?`<div class="block"><p class="lbl">Source</p><div class="src">${src}</div></div>`:""}`;
+  const actionsHtml = f.linkOnly
+    ? `<button class="btn primary" id="cp"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h11l5 5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v5h5"/></svg> Copy prompt for Claude</button>
+       <button class="btn" id="ct"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg> Copy link</button>`
+    : `<button class="btn primary" id="cp"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h11l5 5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v5h5"/></svg> Copy prompt for Claude</button>
+       <button class="btn" id="ct"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg> Copy post</button>`;
+  sheet.innerHTML=`
+    <div class="shead">
+      <button class="close" id="x" aria-label="Close">&#10005;</button>
+      <div class="meta-row"><span class="tag">${f.lane}</span><span class="lib">${libName(f.library)}</span></div>
+      <h2 id="sheet-title">${esc(f.name)}</h2>
+      ${f.archetype?`<p class="arch2">${esc(f.archetype)}</p>`:""}
+    </div>
+    <div class="sbody">${bodyHtml}</div>
+    <div class="actions">${actionsHtml}</div>`;
+  scrim.classList.add("open"); document.body.style.overflow="hidden";
+  $("#x").addEventListener("click",closeSheet);
+  const _lt=document.querySelector("#litext"), _lm=document.querySelector("#limore");
+  if(_lt&&_lm){
+    if(_lt.scrollHeight<=_lt.clientHeight+2) _lm.style.display="none";
+    _lm.addEventListener("click",()=>{_lt.classList.remove("clamped");_lm.style.display="none";});
+  }
+  $("#ct").addEventListener("click",()=>{
+    if(f.linkOnly){copy(url0);toast("Link copied","&#128279;");}
+    else{copy(f.example_text||"");toast("Post copied — screenshot or paste to Claude","&#128203;");}
+  });
+  $("#cp").addEventListener("click",()=>{copy(buildPrompt(f));toast("Prompt copied — paste it into Claude","&#128228;");});
+}
+function closeSheet(){scrim.classList.remove("open");document.body.style.overflow="";activeFormat=null;}
+scrim.addEventListener("click",e=>{if(e.target===scrim)closeSheet();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&scrim.classList.contains("open"))closeSheet();});
+
+// ---- prompt builder ----
+function buildPrompt(f){
+  const who = state.client ? state.client : "my client";
+  const src = state.source.trim()
+    ? state.source.trim()
+    : "[paste your raw material here — or tell Claude which Fathom call / content interview to pull from]";
+  const clientLine = state.client
+    ? `Pull ${state.client}'s context file and recent Fathom calls / content interviews for voice, proof, and specifics.`
+    : `If this is for a specific client, load their context file and recent Fathom calls first.`;
+  const url0 = (f.examples&&f.examples[0]) ? f.examples[0].url : "";
+
+  if(f.linkOnly){
+    return `Reverse-engineer this viral LinkedIn post's format for ${who}.
+
+REFERENCE POST (from my swipe file): ${url0}
+Funnel stage: ${f.lane}
+Name I gave it: ${f.name}
+
+STEP 1 — Read that post first (use the read_linkedin_uri tool, or fetch it). Extract its format: the hook pattern, the block-by-block skeleton, the rhythm/formatting, and why it works.
+STEP 2 — Write 2–3 candidate posts that follow that same format in ${who}'s voice, at the ${f.lane} funnel stage. ${clientLine}
+
+Keep the reference's structure; swap in real specifics from my source material below. De-slop each draft (strip AI tells) and run the QA gate before showing me.
+
+MY SOURCE MATERIAL:
+${src}`;
+  }
+
+  const skel=(f.skeleton||[]).map((s,i)=>`${i+1}. ${s}`).join("\n");
+  return `Reverse-engineer this viral LinkedIn format for ${who}.
+
+FORMAT: ${f.name}  (${f.lane}${f.library?` · ${libName(f.library)}`:""})
+Archetype: ${f.archetype||""}
+Hook pattern: ${f.hook||""}
+Skeleton:
+${skel}
+
+REFERENCE POST — match its SHAPE and rhythm, not its content:
+"""
+${f.example_text||""}
+"""
+
+MY SOURCE MATERIAL:
+${src}
+
+TASK: Write 2–3 candidate posts that follow this format's skeleton, hook pattern, and rhythm, in ${who}'s voice. ${clientLine} De-slop each draft (strip AI tells) and run the QA gate before showing me. Keep the format's structure; swap in real specifics from my source material.`;
+}
+
+// ---- utils ----
+function esc(s){return (s==null?"":String(s)).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+function parseMeta(m){m=m||"";
+  const react=(m.match(/([\d,]+)\s*reactions?/i)||[])[1]||"";
+  const comm=(m.match(/([\d,]+)\s*comments?/i)||[])[1]||"";
+  let author=(m.split(",")[0]||"").trim(),org="";
+  const om=author.match(/^(.*?)\s*\(([^)]+)\)\s*$/); if(om){author=om[1].trim();org=om[2].trim();}
+  const dm=m.match(/(\d{4}-\d{2}-\d{2})|([A-Za-z]{3,9}\s+\d{4})/); const date=dm?dm[0]:"";
+  return {author,org,react,comm,date};
+}
+function clip(s,n){s=s||"";return s.length>n?s.slice(0,n-1)+"…":s;}
+function copy(t){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).catch(()=>fallbackCopy(t));}
+  else fallbackCopy(t);
+}
+function fallbackCopy(t){const ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);}
+let toastT;
+function toast(msg,em){const t=$("#toast");t.innerHTML=`<span class="em">${em||""}</span>${esc(msg)}`;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2200);}
+
+render();
+</script>

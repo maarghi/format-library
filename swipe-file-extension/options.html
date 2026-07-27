@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>My Formats — Setup</title>
+<style>
+  body { font: 14px -apple-system, "Helvetica Neue", Arial, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 20px; color: #1b1b18; line-height: 1.5; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .lead { color: #666; margin-top: 0; }
+  label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: #8a8a86; margin: 24px 0 6px; }
+  input { width: 100%; box-sizing: border-box; padding: 11px 13px; border: 1px solid #d8cdb2; border-radius: 10px; font-size: 15px; background: #fffdf8; }
+  .help { font-size: 12px; color: #8a8a86; margin-top: 6px; }
+  button { margin-top: 18px; padding: 11px 20px; border: 0; border-radius: 10px; background: #1b1b18; color: #fff9ed; font-weight: 700; font-size: 15px; cursor: pointer; }
+  .ok { color: #127c3a; margin-left: 12px; font-weight: 600; }
+  details { margin-top: 30px; }
+  summary { font-size: 12px; color: #8a8a86; cursor: pointer; }
+  details input { font-size: 12px; padding: 8px 10px; margin-top: 8px; }
+</style>
+
+<h1>Set up My Formats</h1>
+<p class="lead">One field and you're done — save LinkedIn posts straight to the shared Format Library.</p>
+
+<label for="name">Your name</label>
+<input id="name" type="text" placeholder="e.g. Jane" autofocus>
+<p class="help">Your saved posts go to a tab with this name in the shared sheet. Pick something short (your first name is perfect).</p>
+
+<div><button id="save">Save</button><span id="ok" class="ok"></span></div>
+
+<details>
+  <summary>Advanced — custom sheet endpoint (optional)</summary>
+  <input id="url" type="text" placeholder="Leave blank to use the shared library">
+  <p class="help">Only needed if you're pointing at a different sheet. Blank = the shared Format Library.</p>
+</details>
+
+<script src="options.js"></script>
