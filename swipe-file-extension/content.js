@@ -26,9 +26,24 @@
     return node;
   }
 
+  // Strip LinkedIn's social-proof header ("Jane Doe and 500 others reacted") that can lead the text.
+  var SOCIAL_RE = /(\band\s[\d,]+\s+others\b|reacted$|(commented on|reposted|shared) this$|(likes|loves|celebrates|supports|finds) this( insightful)?$|^[\d,]+\s+(reactions?|comments?|reposts?)$|^(Promoted|Following|\+?\s*Follow)$)/i;
+  function stripSocial(t) {
+    if (!t) return t;
+    var lines = t.split('\n'), i = 0;
+    while (i < lines.length) {
+      var ln = lines[i].replace(/^\s+|\s+$/g, '');
+      if (ln === '' || (ln.length < 90 && SOCIAL_RE.test(ln))) { i++; continue; }
+      break;
+    }
+    var out = lines.slice(i).join('\n').replace(/^\s+|\s+$/g, '');
+    return out || t;
+  }
   function longestText(w) {
+    // Strip social-proof from EACH candidate first, so "Jane and 500 others reacted"
+    // collapses to "" and can never win as the longest text (the real body wins instead).
     var texts = [].slice.call(w.querySelectorAll('span[dir="ltr"], p'))
-      .map(function (e) { return (e.innerText || '').trim(); })
+      .map(function (e) { return stripSocial((e.innerText || '').trim()); })
       .filter(function (t) { return t.length > 40; });
     texts.sort(function (a, b) { return b.length - a.length; });
     return texts[0] || '';

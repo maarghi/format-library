@@ -19,7 +19,13 @@ def og(h, prop):
     # do NOT stop at the first apostrophe — that truncated posts full of "what's / don't / team's".
     m = (re.search(r'property=["\']og:'+prop+r'["\'][^>]*?content=(["\'])(.*?)\1', h, re.I | re.S)
          or re.search(r'content=(["\'])(.*?)\1[^>]*?property=["\']og:'+prop+r'["\']', h, re.I | re.S))
-    return _html.unescape(m.group(2)) if m else ""
+    if not m: return ""
+    v = m.group(2)
+    for _ in range(3):                       # some LinkedIn values are double-encoded (&amp;#39;)
+        nv = _html.unescape(v)
+        if nv == v: break
+        v = nv
+    return v
 
 def clean_img(img):
     return "" if re.search(r"static\.licdn\.com/(sc|aero)", img) else img
@@ -33,12 +39,19 @@ def parse_author(title, desc):
     if m: return m.group(1).strip()
     return ""
 
+def clean_text(text):
+    text = re.sub(r'\s*\|\s*LinkedIn\s*$', '', text).strip()
+    # reshare titles look like "Commentary | Author | 36 comments" — keep just the commentary.
+    # Guard on length so we never chop a real (long) post body that happens to contain "|".
+    if "|" in text and re.search(r"\bcomments?\b", text, re.I) and len(text) < 220:
+        text = text.split("|")[0].strip()
+    return text
+
 def fetch(url):
     h = urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=18).read().decode("utf-8", "ignore")
     title, desc = og(h, "title"), og(h, "description")
     # prefer the longer of description / title as the copy (title is sometimes the full hook)
-    text = desc if len(desc) >= len(title) else title
-    text = re.sub(r'\s*\|\s*LinkedIn\s*$', '', text).strip()
+    text = clean_text(desc if len(desc) >= len(title) else title)
     return {"text": text, "author": parse_author(title, desc), "image": clean_img(og(h, "image"))}
 
 def main():

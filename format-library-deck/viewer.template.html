@@ -38,8 +38,11 @@
   .fi[aria-pressed="true"]{color:var(--ink);font-weight:700}
   .fi[aria-pressed="true"] .nm{box-shadow:inset 0 -2px 0 var(--stage,var(--ink))}
   .labels-scroll{max-height:220px;overflow-y:auto;margin:-2px -4px;padding:2px 4px}
-  .lblowner{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);font-weight:700;margin:10px 0 3px;padding-top:8px;border-top:1px solid var(--line)}
+  .lblowner{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);font-weight:700;margin:10px 0 3px;padding-top:8px;border-top:1px solid var(--line);cursor:pointer;display:flex;align-items:center;gap:5px;user-select:none}
   .lblowner:first-child{margin-top:0;padding-top:0;border-top:0}
+  .lblowner:hover{color:var(--ink)}
+  .lblcaret{font-size:7px;transition:transform .15s;color:var(--ink-3)}
+  .lblowner.collapsed .lblcaret{transform:rotate(-90deg)}
   .railfoot{margin-top:auto;font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);line-height:1.7}
   .hidtog{color:var(--ink-2);cursor:pointer;text-decoration:underline;text-underline-offset:2px} .hidtog:hover{color:var(--ink)}
   .searchwrap{position:relative}
@@ -73,43 +76,15 @@
   .uname{color:var(--ink-2);font-weight:600;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ulabel{color:var(--ink);font-weight:600;border:1px solid var(--line-2)}
 
-  /* drafting-for selector in rail */
-  .railsel{width:100%;background:var(--card);border:1px solid var(--line-2);border-radius:0;font-family:inherit;font-size:12.5px;padding:8px 10px;color:var(--ink);appearance:none;
-    background-image:linear-gradient(45deg,transparent 50%,var(--ink-3) 50%),linear-gradient(135deg,var(--ink-3) 50%,transparent 50%);background-position:calc(100% - 15px) 55%,calc(100% - 10px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:26px}
-
   /* queue widget */
   .queuewrap{position:absolute;top:16px;right:20px;z-index:66;display:flex;flex-direction:column;align-items:flex-end;gap:5px;pointer-events:none}
   .queuewrap .queuebtn{pointer-events:auto}   /* only the button catches clicks — posts behind stay clickable */
   .queuebtn{display:inline-flex;align-items:center;gap:7px;background:var(--ink);color:#fff;border:0;border-radius:0;
     font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:8px 11px;box-shadow:0 6px 18px rgba(17,17,16,.14)}
   .queuebtn b{font-size:12px} .queuebtn:hover{opacity:.92}
-  .qbreak{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;max-width:280px}
-  .qbreak span{font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);background:rgba(255,255,255,.85);border:1px solid var(--line-2);padding:2px 6px}
-  .qbreak b{color:var(--ink)}
-
-  /* queue panel */
-  .qsheet{background:var(--bg);border:1px solid var(--line-2);width:100%;max-width:560px;box-shadow:0 40px 90px rgba(0,0,0,.3);animation:pop .16s ease-out}
-  .qhead{padding:18px 20px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
-  .qhead h2{margin:0;font-size:18px;font-weight:800;letter-spacing:-.01em}
-  .qbody{padding:8px 20px 12px;max-height:60vh;overflow-y:auto}
-  .qgroup{margin:14px 0 4px} .qgroup .gt{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;display:flex;justify-content:space-between}
-  .qitem{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
-  .qitem .qi-name{flex:1;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .qitem .qi-lane{font-family:var(--mono);font-size:9px;color:var(--stage);border:1px solid var(--stage);padding:1px 5px;text-transform:uppercase}
-  .qitem button{border:1px solid var(--line-2);background:var(--card);border-radius:0;font-size:11px;font-weight:600;padding:5px 9px}
-  .qitem button.draftall{background:var(--ink);color:#fff;border-color:var(--ink)}
-  .qfoot{padding:12px 20px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
-
   /* ICP field in composer */
   .composer .icp{display:flex;flex-direction:column;gap:5px}
   textarea.promptbox{width:100%;font-family:var(--mono);font-size:11px;line-height:1.5;color:var(--ink);background:var(--rail);border:1px solid var(--line-2);border-radius:0;padding:12px;min-height:150px;max-height:320px;resize:vertical}
-  .newlabel{display:flex;gap:6px;margin:8px 0}
-  .newlabel input{flex:1;background:var(--card);border:1px solid var(--line-2);border-radius:0;font-family:inherit;font-size:12.5px;padding:8px 10px;color:var(--ink)}
-  .cardchip.on{cursor:default;color:var(--ink);border-color:var(--ink-2)}
-  .cardchip.on .x{cursor:pointer;margin-left:2px;opacity:.55;font-weight:800}
-  .cardchip.on .x:hover{opacity:1}
-  .cardchip.add{cursor:pointer;color:var(--ink-3);border-color:var(--line-2)}
-  .cardchip.add:hover{color:var(--ink);border-color:var(--ink)}
 
   /* nav chevrons */
   .nav{position:absolute;top:50%;transform:translateY(-50%);z-index:60;width:46px;height:46px;border-radius:0;
@@ -128,20 +103,13 @@
   .app.queuemode .rail{opacity:.35;pointer-events:none}
   @media (max-width:760px){.keypad{display:none}}
 
-  /* post-focused modal */
-  .sheet.post{max-width:560px;position:relative;display:flex;flex-direction:column;max-height:90vh}
-  .sheet.post .sbody{overflow-y:auto;flex:1;min-height:0}
-  .sheet.post .actions{flex:none}
-  .modtop{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px 2px}
   .back{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-2);background:var(--card);border-radius:0;padding:8px 12px;font-size:13px;font-weight:600;color:var(--ink)}
   .back:hover{background:var(--rail)}
-  .modhint{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);text-align:right;line-height:1.5}
-  .modmeta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:14px 0 2px}
 
   /* corner micro-labels */
   .corner{position:absolute;z-index:55;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);pointer-events:none;line-height:1.7}
   .corner.tl{top:20px;left:24px} .corner.tr{top:20px;right:24px;text-align:right}
-  .corner.bl{bottom:20px;left:24px} .corner.br{bottom:20px;right:24px;text-align:right}
+  .corner.bl{bottom:20px;left:24px}
   .corner b{color:var(--ink)}
 
   /* ---------- the card (sharp, floating) ---------- */
@@ -149,8 +117,11 @@
     background:var(--li-bg);color:var(--li-text);border:2.5px solid #E7E3DA;border-radius:14px;position:relative;overflow:hidden;
     padding:17px 19px 6px;box-shadow:0 6px 22px rgba(30,20,8,.08);font-family:var(--sans)}
   .slide.active .li-post{box-shadow:0 44px 96px rgba(17,17,16,.18),0 10px 26px rgba(17,17,16,.09);
-    max-height:84vh;overflow-y:auto;overscroll-behavior:contain}
+    max-height:calc(100vh - 220px);overflow-y:auto;overscroll-behavior:contain}   /* leave room for the funnel label + fixed keypad */
   .slide.active .li-post::-webkit-scrollbar{width:0}   /* clean, still scrollable */
+  /* side cards share one uniform height (no more ragged deck); content fades at the bottom */
+  .slide:not(.active) .li-post{height:440px;overflow:hidden}
+  .slide:not(.active) .li-post::after{content:"";position:absolute;left:0;right:0;bottom:0;height:64px;background:linear-gradient(to bottom,rgba(255,255,255,0),#fff);pointer-events:none}
   .li-open{position:absolute;top:12px;right:12px;z-index:3;width:31px;height:31px;border:1px solid #e5e7ea;background:#fff;
     color:#3a3a36;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.05)}
   .li-open:hover{color:#0a66c2;border-color:#0a66c2}
@@ -165,7 +136,6 @@
   .li-name{font-weight:700;font-size:14.5px;color:var(--li-text);line-height:1.2}
   .li-sub{font-size:12px;color:var(--li-muted);line-height:1.3;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .li-meta{font-size:11.5px;color:var(--li-muted);margin-top:2px}
-  .li-flag{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--stage);border:1px solid var(--stage);padding:2px 5px;line-height:1;align-self:flex-start;margin-top:2px}
   .li-text{font-size:13.5px;line-height:1.5;color:var(--li-text);white-space:pre-wrap;word-wrap:break-word}
   .li-text.clamped{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .li-media{margin:11px -17px 0;border-top:1px solid var(--li-line);background:#f3f2ef;line-height:0}
@@ -176,21 +146,6 @@
   .li-reacts .n{margin-left:10px;color:var(--li-muted)}
   .li-actions{display:flex;justify-content:space-around;padding:1px 0 3px;border-top:1px solid var(--li-line)}
   .li-actions button{display:inline-flex;align-items:center;gap:6px;background:none;border:0;color:#5e6670;font-weight:600;font-size:12.5px;padding:8px 6px;font-family:var(--sans)}
-  .pfoot{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:11px}
-  .cardchip{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--stage);border:1px solid color-mix(in srgb,var(--stage) 40%,transparent);padding:2px 6px;line-height:1.4}
-  .cardnote{font-size:11px;color:var(--ink-3);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
-
-  /* format (Virio/Millie) card */
-  .fcard{background:var(--card);border:1px solid var(--line-2);border-radius:0;padding:17px 18px 16px;display:flex;flex-direction:column;gap:10px;
-    box-shadow:0 2px 10px rgba(17,17,16,.05);position:relative;min-height:210px}
-  .slide.active .fcard{box-shadow:0 30px 70px rgba(17,17,16,.16),0 6px 18px rgba(17,17,16,.08)}
-  .fcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--stage)}
-  .fcard .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .tag{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--stage);border:1px solid var(--stage);padding:2px 6px;line-height:1.3}
-  .lib{font-family:var(--mono);font-size:9px;color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase}
-  .fcard h3{margin:0;font-size:18px;font-weight:800;letter-spacing:-.015em;line-height:1.14;text-wrap:balance}
-  .fcard .arch{font-size:12.5px;color:var(--ink-2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-  .fcard .hook{margin-top:auto;font-family:var(--serif);font-size:13px;font-style:italic;color:var(--ink-3);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;padding-top:10px;border-top:1px dashed var(--line-2)}
 
   /* ---------- modal ---------- */
   .scrim{position:fixed;inset:0;background:rgba(20,18,14,.5);backdrop-filter:blur(2px);display:none;align-items:flex-start;justify-content:center;padding:40px 20px;z-index:200;overflow-y:auto}
@@ -202,24 +157,15 @@
   .meta-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
   .sheet h2{margin:0;font-size:23px;font-weight:800;letter-spacing:-.02em;line-height:1.06;text-wrap:balance}
   .sheet .arch2{margin:6px 0 0;font-size:13px;color:var(--ink-2);line-height:1.45}
-  .close{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:0;border:1px solid var(--line-2);background:var(--card);color:var(--ink-2);font-size:15px;display:flex;align-items:center;justify-content:center}
-  .close:hover{color:var(--ink)}
   .sbody{padding:18px 22px 8px} .block{margin-bottom:18px} .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin:0 0 8px}
-  .hookline{font-family:var(--serif);font-size:14.5px;font-style:italic;color:var(--ink);line-height:1.5;padding-left:12px;border-left:2px solid var(--stage)}
-  ol.skel{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:5px} ol.skel li{font-size:12.5px;color:var(--ink-2);line-height:1.4} ol.skel li::marker{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
-  .sheetchips{display:flex;flex-wrap:wrap;gap:6px} .sheetnote{font-family:var(--serif);font-size:14px;font-style:italic;color:var(--ink);line-height:1.5;padding-left:12px;border-left:2px solid var(--stage)}
-  .src{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
-  .src a{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;color:var(--ink-2);background:var(--card);border:1px solid var(--line-2);padding:5px 9px;text-decoration:none;max-width:100%}
-  .src a:hover{border-color:var(--stage);color:var(--ink)} .src a .m{color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .linknote{font-size:13px;color:var(--ink-2);line-height:1.5;margin:0 0 14px}
-  .li-more{background:none;border:0;color:var(--li-muted);font-weight:600;font-size:14px;padding:3px 0 0;font-family:var(--sans)} .li-more:hover{color:#0a66c2}
   .composer{display:flex;flex-direction:column;gap:9px;background:var(--rail);border:1px solid var(--line);padding:13px 14px}
   .composer .crow{display:flex;gap:9px;align-items:center}
   .composer select,.composer textarea{width:100%;background:var(--card);border:1px solid var(--line-2);border-radius:0;font-family:inherit;font-size:12.5px;padding:8px 10px;color:var(--ink)}
   .composer textarea{resize:vertical;min-height:56px;line-height:1.45}
   .composer .cl{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
   .actions{position:sticky;bottom:0;display:flex;gap:9px;padding:14px 22px 18px;background:linear-gradient(to top,var(--bg) 72%,transparent);flex-wrap:wrap}
-  .btn{display:inline-flex;align-items:center;gap:7px;border-radius:0;font-size:13px;font-weight:600;padding:10px 14px;border:1px solid var(--line-2);background:var(--card);color:var(--ink)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:0;font-size:13px;font-weight:600;padding:10px 14px;border:1px solid var(--line-2);background:var(--card);color:var(--ink);text-decoration:none;cursor:pointer}
   .btn:hover{background:var(--rail)} .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);flex:1;justify-content:center;min-width:180px} .btn.primary:hover{opacity:.92} .btn svg{flex:none} .openbtn{text-decoration:none}
 
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--ink);color:#fff;font-size:13px;font-weight:600;padding:11px 18px;border-radius:0;box-shadow:0 10px 30px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:300}
@@ -308,6 +254,22 @@
     font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;padding:4px 7px}
   .fchip .fx{cursor:pointer;font-weight:700;font-size:12px;line-height:1;opacity:.5} .fchip .fx:hover{opacity:1;color:var(--ink)}
   .app.queuemode .railfilters{display:none}
+
+  /* welcome / loading screen — covers the first fetch + shuffle */
+  .welcome{position:fixed;inset:0;z-index:400;background:var(--bg);display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;
+    transition:opacity .55s ease,visibility .55s}
+  .welcome.gone{opacity:0;visibility:hidden;pointer-events:none}
+  .wc-inner{max-width:640px;animation:wcIn .7s cubic-bezier(.2,.7,.2,1) both}
+  .wc-frog{width:60px;height:60px;margin-bottom:28px;animation:wcBob 2.6s ease-in-out infinite}
+  .wc-title{font-family:var(--sans);font-weight:800;font-size:clamp(28px,4.6vw,46px);line-height:1.08;letter-spacing:-.03em;color:var(--ink-2);margin:0;text-wrap:balance}
+  .wc-title span{color:var(--ink)}   /* punchline in full black; setup line a touch softer */
+  .wc-load{margin-top:34px;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);display:inline-flex;align-items:center;gap:8px}
+  .wc-dots{display:inline-flex;gap:4px} .wc-dots i{width:5px;height:5px;border-radius:50%;background:var(--ink-3);animation:wcPulse 1.15s ease-in-out infinite}
+  .wc-dots i:nth-child(2){animation-delay:.18s} .wc-dots i:nth-child(3){animation-delay:.36s}
+  @keyframes wcBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  @keyframes wcPulse{0%,100%{opacity:.25;transform:scale(.7)}50%{opacity:1;transform:scale(1)}}
+  @keyframes wcIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.wc-frog,.wc-dots i{animation:none} .wc-inner{animation:none}}
 </style>
 
 <div class="app">
@@ -333,7 +295,6 @@
     <button class="nav next" id="next" aria-label="Next">›</button>
     <div class="queuewrap" id="queuewrap">
       <button class="queuebtn" id="queueBtn">&#9873; <b id="qn">0</b>&nbsp;queued</button>
-      <div class="qbreak" id="qbreak"></div>
     </div>
     <div class="corner tl" id="cTL"></div>
     <div class="corner tr" id="cTR"></div>
@@ -344,14 +305,43 @@
       <button class="kbtn" data-k="down"><span class="ar">&#9660;</span> See more</button>
       <button class="kbtn" data-k="right">Next <span class="ar">&#9658;</span></button>
       <button class="kbtn" data-k="shuffle"><b>S</b>&nbsp;Shuffle</button>
+      <button class="kbtn" data-k="hide"><b>H</b>&nbsp;Hide</button>
       <button class="kbtn" id="kQueue" data-k="queue"><b>Q</b>&nbsp;View queue</button>
     </div>
   </main>
 </div>
 
 <div class="scrim" id="scrim" role="dialog" aria-modal="true" aria-labelledby="sheet-title"><div class="sheet" id="sheet"></div></div>
-<div class="scrim" id="qscrim" role="dialog" aria-modal="true"><div class="qsheet" id="qsheet"></div></div>
 <div class="toast" id="toast"></div>
+
+<div class="welcome" id="welcome">
+  <div class="wc-inner">
+    <img class="wc-frog" src="__FROG_ICON__" alt="">
+    <h1 class="wc-title">You might need to sit down.<br><span>You're about to go viral.</span></h1>
+    <div class="wc-load"><span class="wc-dots"><i></i><i></i><i></i></span> Shuffling the deck</div>
+  </div>
+</div>
+<script>
+  /* FAILSAFE — a separate script so even a fatal error in the main app can never leave the
+     welcome screen stuck forever. Dismisses it after 5s no matter what. */
+  setTimeout(function(){ var w=document.getElementById('welcome'); if(w) w.classList.add('gone'); }, 5000);
+  /* DIAGNOSTIC — paint any error onto the screen so it's visible in a screenshot
+     (the Apps-Script sandbox hides the console cross-origin). Used for both uncaught
+     errors AND the ones the app's own try/catch blocks swallow. */
+  window.__showErr = function(msg, where){
+    try{
+      var w=document.getElementById('welcome'); if(w) w.classList.add('gone');
+      var b=document.getElementById('__err');
+      if(!b){ b=document.createElement('div'); b.id='__err';
+        b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#b00020;color:#fff;font:600 13px/1.5 ui-monospace,monospace;padding:12px 16px;white-space:pre-wrap;max-height:45vh;overflow:auto';
+        document.body.appendChild(b); }
+      b.textContent += '⚠ ['+(where||'')+'] '+msg+'\n';
+    }catch(_){}
+  };
+  window.addEventListener('error', function(e){
+    window.__showErr((e.message||'error')+'  @'+((e.filename||'').split('/').pop())+':'+(e.lineno||'?'), 'uncaught');
+  });
+</script>
 
 <script>
 const BUNDLED = /*__BUNDLED__*/ [];
@@ -379,6 +369,7 @@ let queueMode = false;   // D = browse the drafting queue in the same coverflow
 
 // ---------- filtering ----------
 function postKey(f){ return (f.examples&&f.examples[0]&&f.examples[0].url) || (f.name+"|"+(f.author||"")+"|"+(f.library||"")); }
+function labelsOf(f){ return Array.isArray(f.labels) ? f.labels : (f.labels ? [String(f.labels)] : []); }   // sheets can return a bare string
 function matches(f){
   if(f.lane==="ABM") return false;                                   // ABM retired — TOFU/MOFU/BOFU only
   const isHidden = hidden.has(postKey(f));
@@ -396,9 +387,9 @@ function matches(f){
     const t=f.savedAt?Date.parse(f.savedAt):NaN;
     if(isNaN(t) || (Date.now()-t) > state.recent*86400000) return false;
   }
-  if(state.labels.size && !(f.labels||[]).some(l=>state.labels.has(l))) return false;   // multi-select label (any)
+  if(state.labels.size && !labelsOf(f).some(l=>state.labels.has(l))) return false;   // multi-select label (any)
   if(state.q){
-    const hay=(f.name+" "+(f.archetype||"")+" "+(f.hook||"")+" "+(f.author||"")+" "+f.lane+" "+(f.labels||[]).join(" ")+" "+(f.note||"")+" "+(f.example_text||"")).toLowerCase();
+    const hay=(f.name+" "+(f.archetype||"")+" "+(f.hook||"")+" "+(f.author||"")+" "+f.lane+" "+labelsOf(f).join(" ")+" "+(f.note||"")+" "+(f.example_text||"")).toLowerCase();
     if(!hay.includes(state.q)) return false;
   }
   return true;
@@ -456,13 +447,18 @@ function labelRow(l,count){
 function buildLabels(){
   const el=$("#labels"); if(!el) return; el.innerHTML="";
   const byOwner={};   // owner -> {label: count}; a shared label appears under each person who uses it
-  FORMATS.forEach(f=>(f.labels||[]).forEach(l=>{ const o=ownerOf(f); (byOwner[o]=byOwner[o]||{})[l]=(byOwner[o][l]||0)+1; }));
+  FORMATS.forEach(f=>labelsOf(f).forEach(l=>{ const o=ownerOf(f); (byOwner[o]=byOwner[o]||{})[l]=(byOwner[o][l]||0)+1; }));
   const owners=Object.keys(byOwner).sort();
   if(!owners.length){el.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--ink-3)">No labels yet — add them when you save a post.</div>';return;}
   owners.forEach(o=>{
-    const h=document.createElement("div"); h.className="lblowner"; h.textContent=o; el.appendChild(h);
+    const collapsed=collapsedOwners.has(o);
+    const h=document.createElement("div"); h.className="lblowner"+(collapsed?" collapsed":"");
+    h.innerHTML=`<span class="lblcaret">&#9662;</span> ${esc(o)}`;
+    const group=document.createElement("div"); group.className="lblgroup"; if(collapsed) group.hidden=true;
     Object.keys(byOwner[o]).sort((a,b)=>byOwner[o][b]-byOwner[o][a]||a.localeCompare(b))
-      .forEach(l=>el.appendChild(labelRow(l, byOwner[o][l])));
+      .forEach(l=>group.appendChild(labelRow(l, byOwner[o][l])));
+    h.onclick=()=>{ collapsed?collapsedOwners.delete(o):collapsedOwners.add(o); saveLS('fl_collapsedOwners',[...collapsedOwners]); buildLabels(); };
+    el.appendChild(h); el.appendChild(group);
   });
 }
 function deleteLabelEverywhere(l){
@@ -480,15 +476,6 @@ function renameLabelEverywhere(o,n){
 
 // ---------- card markup ----------
 // Every entry renders as a real LinkedIn post. Funnel + name + labels float underneath.
-const FUNNEL_JOB={
-  TOFU:"Earn reach with the ICP — pure top-of-funnel awareness.",
-  MOFU:"Make the problem urgent and the approach credible.",
-  BOFU:"Convert existing intent into action.",
-  ABM:"Get a named target to notice it and amplify."
-};
-function postAuthor(f){ const m0=parseMeta((f.examples&&f.examples[0]?f.examples[0].meta:"")||""); return f.library==="saved"?(f.author||"LinkedIn author"):(m0.author||"LinkedIn author"); }
-
-// The album cover: the post image is the art. Falls back to a typographic sleeve.
 function cardHTML(f){
   const saved=f.library==="saved";
   const m0=parseMeta((f.examples&&f.examples[0]?f.examples[0].meta:"")||"");
@@ -496,7 +483,7 @@ function cardHTML(f){
   const sub = saved ? "" : (m0.org||"");
   const react = saved ? f.reactions : m0.react;
   const comm  = saved ? f.comments  : m0.comm;
-  const text = f.example_text || f.archetype || f.name || "";
+  const text = bodyOf(f);   // clean copy → real name; never the reactions header
   const link = (f.examples&&f.examples[0])?f.examples[0].url:"";
   const media = f.image ? `<div class="li-media"><img loading="lazy" data-img="${esc(f.image)}" alt=""></div>` : "";   // no image → clean text-only post
   const hideCorner = `<button class="li-hide" title="${state.showHidden?"Restore this post":"Hide this post"}" onclick="event.stopPropagation()">${state.showHidden
@@ -504,7 +491,8 @@ function cardHTML(f){
     : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 10 8 10 8a18 18 0 0 1-2.16 3.19m-6.72-1.07A3 3 0 1 1 9.9 9.9"/><path d="M1 1l22 22"/><path d="M4.2 4.2A18 18 0 0 0 2 12s3 8 10 8a9 9 0 0 0 4.3-1.1"/></svg>`}</button>`;
   const stats=(react||comm)
     ? `<div class="li-stats"><span class="li-reacts"><span class="rd" style="background:#0a66c2">&#128077;</span><span class="rd" style="background:#e06847">&#10084;</span><span class="rd" style="background:#d7a029">&#128079;</span><span class="n">${esc(react||"")}</span></span><span>${comm?esc(comm)+" comments":""}</span></div>` : "";
-  const metaLine = saved ? (f.person?"Saved by "+esc(f.person)+" · ":"") : (m0.date?esc(m0.date)+" · ":"");
+  const saver = f.person || (f.library==="millies"?"Millie":f.library==="virio"?"Virio":"the library");
+  const metaLine = "Saved by "+esc(saver)+" · ";   // always show who saved it (never the date)
   const openCorner = link
     ? `<a class="li-open" href="${esc(link)}" target="_blank" rel="noopener" title="Open original on LinkedIn" onclick="event.stopPropagation()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg></a>` : "";
   return `<div class="float">
@@ -535,7 +523,7 @@ const track=$("#track");
 function rebuild(){
   VIEW = queueMode ? queue.slice() : FORMATS.filter(matches);
   renderTrack();
-  if(typeof updateFilterBar==="function") updateFilterBar();
+  updateFilterBar();
 }
 function renderTrack(){
   active = 0;
@@ -548,9 +536,15 @@ function renderTrack(){
   const frag=document.createDocumentFragment();
   VIEW.forEach((f,i)=>{
     const s=document.createElement("div"); s.className="slide"; s.setAttribute("data-stage",f.lane||""); s.dataset.i=i;
-    s.innerHTML=cardHTML(f);
+    try{ s.innerHTML=cardHTML(f); }catch(err){ s.innerHTML='<div class="float"><div class="li-post"><div class="li-text">'+esc(f.name||"Post")+'</div></div></div>'; }   // one bad post can't break the deck
     // click any card → center it AND open its drafting menu (the exact post you clicked)
-    s.addEventListener("click",()=>{ setActive(i); openSheet(f); });
+    s.addEventListener("click",(e)=>{
+      if(e.target.closest(".li-open,.li-hide")) return;                 // let the corner buttons work
+      if(+s.dataset.i!==active){ setActive(i); return; }                // click a side card → center it
+      const t=s.querySelector(".li-text");
+      if(t && t.classList.contains("clamped")){ t.classList.remove("clamped"); return; }   // 1st click on centered card → read the full post
+      openSheet(f);                                                     // click again → open the drafting menu
+    });
     const img=s.querySelector("img[data-img]"); if(img) attachImage(img);
     const hb=s.querySelector(".li-hide"); if(hb) hb.onclick=(ev)=>{ ev.stopPropagation(); toggleHidden(f); };
     frag.appendChild(s);
@@ -572,18 +566,16 @@ function layout(){
   slides.forEach(s=>{
     const d=(+s.dataset.i)-active, ad=Math.abs(d), dir=Math.sign(d);
     let x,z,ry,sc,op;
-    let rz;
-    if(d===0){x=0;z=0;ry=0;rz=0;sc=1;op=1;}
+    if(d===0){x=0;z=0;ry=0;sc=1;op=1;}
     else{
       // posts face you and stay visible; neighbors angle back slightly, spread WIDE
       x = dir*(496 + (ad-1)*338);
       z = -190*ad;
       ry = -dir*16;
-      rz = 0;
       sc = Math.max(0.68, 1-0.12*ad);
       op = ad>4?0:Math.max(0.26,1-0.22*ad);
     }
-    s.style.transform=`translate(-50%,-50%) translateX(${x}px) translateZ(${z}px) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${sc})`;
+    s.style.transform=`translate(-50%,-50%) translateX(${x}px) translateZ(${z}px) rotateY(${ry}deg) scale(${sc})`;
     s.style.opacity=op;
     s.style.zIndex=String(200-ad);
     s.style.pointerEvents = ad>4 ? "none" : "auto";
@@ -643,7 +635,7 @@ $("#keypad").addEventListener("click",e=>{ const b=e.target.closest(".kbtn"); if
   if(k==="left")step(-1); else if(k==="right")step(1);
   else if(k==="up"){ queueMode?removeCurrentFromQueue():queueCurrent(); }
   else if(k==="down")onDown(); else if(k==="queue")toggleQueueMode();
-  else if(k==="shuffle")shuffle(); });
+  else if(k==="shuffle")shuffle(); else if(k==="hide"){ const f=VIEW[active]; if(f) toggleHidden(f); } });
 document.addEventListener("keydown",e=>{
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)){
     if(e.key==="Escape"){ e.preventDefault(); e.target.blur(); }  // Esc drops focus → arrows work again
@@ -662,6 +654,7 @@ document.addEventListener("keydown",e=>{
   else if(k==="Enter"){e.preventDefault(); draftNow();}
   else if(k==="q"||k==="Q"||k==="d"||k==="D"){e.preventDefault(); toggleQueueMode();}             // Q = go to the queue
   else if(k==="s"||k==="S"){e.preventDefault(); shuffle();}
+  else if(k==="h"||k==="H"){e.preventDefault(); const f=VIEW[active]; if(f) toggleHidden(f);}
   else if(k==="Escape"&&queueMode){e.preventDefault(); toggleQueueMode();}
 });
 
@@ -721,12 +714,16 @@ function imgFail(img){
 // ---------- modal ----------
 const scrim=$("#scrim"), sheet=$("#sheet");
 function openSheet(f){
+  // Per-draft client: default to NONE every time so a stale client can never carry over.
+  // A queued post keeps the client it was queued for (an explicit earlier choice).
+  setClient(f.client!=null ? (f.client==="Unassigned"?"":f.client) : "");
   const saved=f.library==="saved";
   const url0=(f.examples&&f.examples[0])?f.examples[0].url:"";
   const m0=parseMeta((f.examples&&f.examples[0]?f.examples[0].meta:"")||"");
   const author=saved?(f.author||"LinkedIn author"):(m0.author||"LinkedIn author");
   const react=saved?f.reactions:m0.react, comm=saved?f.comments:m0.comm;
-  const firstLine=(f.example_text||"").split("\n").map(s=>s.trim()).filter(Boolean)[0]||f.archetype||f.name||"";
+  const bodyText=bodyOf(f);
+  const firstLine=bodyText.split("\n").map(s=>s.trim()).filter(Boolean)[0]||f.archetype||f.name||"";
   const thumb=f.image?`<img data-img="${esc(f.image)}" alt="">`:"";
   const liPost=(saved||f.example_text)?`
     <div class="li-post">
@@ -734,9 +731,9 @@ function openSheet(f){
         <div class="li-ava" style="background:var(--stage)">${esc(initials(author))}</div>
         <div class="li-idwrap"><div class="li-name">${esc(author)}</div>
           ${(!saved&&m0.org)?`<div class="li-sub">${esc(m0.org)}</div>`:``}
-          <div class="li-meta">${saved&&f.person?"Saved by "+esc(f.person)+" · ":(m0.date?esc(m0.date)+" · ":"")}&#127760;</div></div>
+          <div class="li-meta">Saved by ${esc(f.person||(f.library==="millies"?"Millie":f.library==="virio"?"Virio":"the library"))} · &#127760;</div></div>
       </div>
-      <div class="li-text">${esc(f.example_text||"")}</div>
+      <div class="li-text">${esc(bodyText)}</div>
       ${f.image?`<div class="li-media"><img id="modimg" data-img="${esc(f.image)}" alt=""></div>`:``}
       ${(react||comm)?`<div class="li-stats"><span class="li-reacts"><span class="rd" style="background:#0a66c2">&#128077;</span><span class="rd" style="background:#e06847">&#10084;</span><span class="rd" style="background:#d7a029">&#128079;</span><span class="n">${esc(react||"")}</span></span><span>${comm?esc(comm)+" comments":""}</span></div>`:``}
     </div>`:`<p class="linknote">This one's link-only — open it on LinkedIn.</p>`;
@@ -761,7 +758,7 @@ function openSheet(f){
       ${composerHTML()}
     </div>
     <div class="actions">
-      <button class="btn accent" id="openClaude">&#10022;&nbsp;Open in Claude</button>
+      <a class="btn accent" id="openClaude" target="_blank" rel="noopener">&#10022;&nbsp;Open in Claude</a>
       <button class="btn" id="cp">Copy prompt</button>
       <button class="btn" id="qm">&#9650;&nbsp;Queue</button>
     </div>`;
@@ -781,16 +778,28 @@ function openSheet(f){
     if(cso) cso.value=state.source_text;
     const refresh=()=>{ if(cpv){ cpv.value=buildPrompt(f); promptDirty=false; } };
     refresh();
-    cc.onchange=e=>{ setClient(e.target.value); if(ci) ci.value=getIcp(state.client); refresh(); refreshBadge(); };
+    const onClient=()=>{ setClient(cc.value); if(ci) ci.value=getIcp(state.client); refresh(); refreshBadge(); };
+    cc.onchange=onClient; cc.addEventListener("input",onClient);   // update prompt+badge the instant a client is picked
     if(ci) ci.oninput=e=>{ setIcp(state.client, e.target.value); refresh(); };
     if(cso) cso.oninput=e=>{ state.source_text=e.target.value; refresh(); };
     if(cpv) cpv.oninput=()=>{ promptDirty=true; };
     const cint=$("#cInterview"); if(cint){ cint.checked=state.useInterview; cint.onchange=e=>{ state.useInterview=e.target.checked; refresh(); }; }
   }
-  // Always send what's shown: rebuild fresh for THIS post/client unless the user hand-edited it.
-  const currentPrompt=()=> (promptDirty && cpv) ? cpv.value : buildPrompt(f);
-  $("#cp").onclick=()=>{ copy(currentPrompt()); toast("Prompt copied","&#128228;"); };
-  $("#openClaude").onclick=()=>{ openInClaude(currentPrompt()); };
+  // Always send what the dropdown SHOWS. If a pending <select> change never committed to
+  // state.client (iframe select quirk), resync from cc.value at click time and rebuild.
+  function currentPrompt(){
+    if(cc && cc.value!==(state.client||"")){ setClient(cc.value); if(ci) ci.value=getIcp(state.client); if(cpv){ cpv.value=buildPrompt(f); promptDirty=false; } refreshBadge(); }
+    return (promptDirty && cpv) ? cpv.value : buildPrompt(f);
+  }
+  $("#cp").onclick=()=>{ copy(currentPrompt()); toast("Prompt copied"+(state.client?" · "+state.client:""),"&#128228;"); };
+  // "Open in Claude" is a REAL link — iframes block window.open(), which was opening a stale/blocked tab.
+  const oc=$("#openClaude");
+  // Prefill via ?q= when it safely fits in a URL (~8KB server limit); otherwise open a fresh
+  // Claude tab and copy the full correct prompt to paste. Either way the RIGHT prompt is used.
+  const setHref=t=>{ const u="https://claude.ai/new?q="+encodeURIComponent(t); oc._long=u.length>7500; oc.href=oc._long?"https://claude.ai/new":u; };
+  setHref(currentPrompt());                                              // initial (covers keyboard activation too)
+  oc.addEventListener("mousedown",()=>{ const t=currentPrompt(); setHref(t); copy(t); });   // refresh to the LATEST prompt + copy as backup
+  oc.addEventListener("click",()=>{ toast(oc._long ? "Prompt copied — paste it into the new chat" : "Opening Claude"+(state.client?" · "+state.client:""), "&#10022;"); });
 }
 function composerHTML(){
   const opts=['<option value="">— generic / no client —</option>'].concat(CLIENTS.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`)).join("");
@@ -811,13 +820,6 @@ let modalOpen=false, openedIndex=-1;
 function hideModal(){ if(!modalOpen)return; modalOpen=false; scrim.classList.remove("open"); document.body.style.overflow=""; if(openedIndex>=0) setActive(openedIndex); }
 function closeSheet(){ hideModal(); }
 scrim.addEventListener("click",e=>{if(e.target===scrim)closeSheet();});
-// Open a new Claude chat prefilled with the prompt (falls back to copy for very long prompts).
-function openInClaude(text){
-  text=text||"";
-  const url="https://claude.ai/new?q="+encodeURIComponent(text);
-  if(url.length<=6000){ window.open(url,"_blank","noopener"); toast("Opening a new Claude chat…","&#10022;"); }
-  else { copy(text); window.open("https://claude.ai/new","_blank","noopener"); toast("Prompt copied — paste it into the new chat","&#128203;"); }
-}
 // Reward animation: the post flies off toward the queue counter.
 function flyToQueueFrom(el){
   const qb=$("#queueBtn"); if(!el||!qb){ return; }
@@ -889,18 +891,25 @@ function fallbackCopy(t){const ta=document.createElement("textarea");ta.value=t;
 let toastT; function toast(msg,em){const t=$("#toast");t.innerHTML=`<span class="em">${em||""}</span>${esc(msg)}`;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2200);}
 
 // ---------- drafting queue + per-client ICP (persisted) ----------
-function loadLS(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
+function loadLS(k,d){ try{ const v=localStorage.getItem(k); if(v==null) return d; const p=JSON.parse(v);
+  return (Array.isArray(d)&&!Array.isArray(p)) ? d : p;   // guard: corrupt/mistyped value can't crash new Set(...) at boot
+}catch(e){ return d; } }
 function saveLS(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
-let queue = loadLS('fl_queue',[]);
+const asArr = x => Array.isArray(x) ? x : [];                 // never let a bad stored value crash boot
+let queue = asArr(loadLS('fl_queue',[]));
 let icps  = loadLS('fl_icps',{});
-let hidden = new Set(loadLS('fl_hidden',[]));                 // post keys the user has hidden as stale
+let hidden = new Set(asArr(loadLS('fl_hidden',[])));          // post keys the user has hidden as stale
 let seenCount = loadLS('fl_seenCount', null);                 // #saved posts at last visit (for "N added" toast)
+let collapsedOwners = new Set(asArr(loadLS('fl_collapsedOwners',[])));   // which label groups are collapsed
 state.client = loadLS('fl_draftClient', state.client);
 function saveHidden(){ saveLS('fl_hidden',[...hidden]); }
-function toggleHidden(f){ const k=postKey(f); hidden.has(k)?hidden.delete(k):hidden.add(k); saveHidden();
+function toggleHidden(f){
+  if(queueMode){ toast("Exit the queue to hide posts","&#9873;"); return; }   // hiding from the queue view is confusing — block it
+  const k=postKey(f); hidden.has(k)?hidden.delete(k):hidden.add(k); saveHidden();
   toast(hidden.has(k)?"Post hidden":"Post restored", hidden.has(k)?"&#128584;":"&#128064;");
+  if(state.showHidden && hidden.size===0) state.showHidden=false;             // don't get trapped in an empty Hidden view
   refreshAll(); }
-function toggleHiddenView(){ state.showHidden=!state.showHidden; document.querySelector(".app").classList.toggle("hiddenview",state.showHidden); refreshAll(); }
+function toggleHiddenView(){ state.showHidden=!state.showHidden; refreshAll(); }
 function getIcp(c){ return c ? (icps[c] || DEFAULT_ICPS[c] || "") : ""; }
 function setIcp(c,v){ if(!c)return; icps[c]=v; saveLS('fl_icps',icps); }
 function setClient(v){ state.client=v; saveLS('fl_draftClient',v||""); }   // client is chosen inside the drafting panel now
@@ -920,49 +929,11 @@ function queueCurrent(){
   if(active<VIEW.length-1) step(1);
 }
 function draftNow(){ const f=VIEW[active]; if(f) openSheet(f); }   // ↓ / Enter = open the post ("see more")
-function updateQueue(){
-  const qn=$("#qn"); if(qn) qn.textContent=queue.length;
-  const by={}; queue.forEach(q=>by[q.client]=(by[q.client]||0)+1);
-  const qb=$("#qbreak"); if(qb) qb.innerHTML=Object.keys(by).sort().map(c=>`<span><b>${esc(c)}</b> ${by[c]}</span>`).join("");
-  if($("#qscrim").classList.contains("open")) renderQueue();
-}
-const qscrim=$("#qscrim");
+function updateQueue(){ const qn=$("#qn"); if(qn) qn.textContent=queue.length; }
 $("#queueBtn").onclick=toggleQueueMode;   // browse the queue in the coverflow
-function openQueue(){ renderQueue(); qscrim.classList.add("open"); document.body.style.overflow="hidden"; }
-function closeQueue(){ qscrim.classList.remove("open"); if(!$("#scrim").classList.contains("open")) document.body.style.overflow=""; }
-qscrim.addEventListener("click",e=>{if(e.target===qscrim)closeQueue();});
-function renderQueue(){
-  const qs=$("#qsheet");
-  if(!queue.length){
-    qs.innerHTML=`<div class="qhead"><h2>Drafting queue</h2><button class="close" id="qx">&#10005;</button></div><div class="qbody"><p style="color:var(--ink-3);font-size:13px;padding:18px 0">Nothing queued yet. Press <b>↑</b> on a post to queue it for drafting.</p></div>`;
-    $("#qx").onclick=closeQueue; return;
-  }
-  const by={}; queue.forEach((q,idx)=>{(by[q.client]=by[q.client]||[]).push({q,idx});});
-  let body="";
-  Object.keys(by).sort().forEach(c=>{
-    body+=`<div class="qgroup"><div class="gt"><span>${esc(c)} · ${by[c].length}</span><button class="draftall" data-draftall="${esc(c)}">Copy batch prompt →</button></div>`;
-    by[c].forEach(({q,idx})=>{ body+=`<div class="qitem"><span class="qi-lane" data-stage="${esc(q.lane||'')}">${esc(q.lane||'—')}</span><span class="qi-name">${esc(q.name)}</span><button data-draft="${idx}">Draft</button><button data-rm="${idx}" aria-label="Remove">&times;</button></div>`; });
-    body+=`</div>`;
-  });
-  qs.innerHTML=`<div class="qhead"><h2>Drafting queue · ${queue.length}</h2><button class="close" id="qx">&#10005;</button></div><div class="qbody">${body}</div><div class="qfoot"><button class="btn" id="qclear">Clear all</button></div>`;
-  $("#qx").onclick=closeQueue;
-  $("#qclear").onclick=()=>{ if(confirm("Clear the whole queue?")){ queue=[]; saveLS('fl_queue',queue); updateQueue(); renderQueue(); } };
-  qs.querySelectorAll("[data-draft]").forEach(b=>b.onclick=()=>{ const q=queue[+b.dataset.draft]; setClient(q.client==="Unassigned"?"":q.client); closeQueue(); openSheet(q); });
-  qs.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{ queue.splice(+b.dataset.rm,1); saveLS('fl_queue',queue); updateQueue(); });
-  qs.querySelectorAll("[data-draftall]").forEach(b=>b.onclick=()=>{ const c=b.dataset.draftall; setClient(c==="Unassigned"?"":c); copy(buildBatchPrompt(by[c].map(x=>x.q),c)); toast("Batch prompt copied for "+c,"&#128228;"); });
-}
-function buildBatchPrompt(items,client){
-  const who=client==="Unassigned"?"my client":client;
-  const icp=(client&&client!=="Unassigned")?getIcp(client):"";
-  let out=`Draft LinkedIn posts for ${who} from ${items.length} saved viral formats.\n`;
-  if(icp) out+=`ICP / target reader: ${icp}\n`;
-  out+=`Load ${who}'s context file + recent Fathom calls first. For EACH format: reverse-engineer its structure and write 2–3 candidates in ${who}'s voice, de-slopped and QA-gated.\n\n`;
-  items.forEach((f,i)=>{ const u=(f.examples&&f.examples[0])?f.examples[0].url:""; out+=`${i+1}. ${f.name} (${f.lane})${u?" — "+u:""}\n${f.example_text?`"""\n${f.example_text}\n"""\n`:""}\n`; });
-  return out;
-}
 
 // ---------- boot + live data ----------
-function refreshAll(){ buildStages(); buildRecents(); buildSources(); buildLabels(); updateQueue(); rebuild(); }
+function refreshAll(){ [buildStages,buildRecents,buildSources,buildLabels,updateQueue,rebuild].forEach(fn=>{ try{ fn(); }catch(e){ try{window.__showErr((fn.name||'builder')+': '+(e&&e.message||e), 'refreshAll');}catch(_){}}}); }   // one bad builder can't blank the rest
 function fillImages(rows){
   (rows||[]).forEach(f=>{
     const url = (f.examples && f.examples[0]) ? f.examples[0].url : "";
@@ -971,13 +942,31 @@ function fillImages(rows){
       if(m && m.image) f.image=m.image;
       else if(url && POST_IMAGES[url]) f.image=POST_IMAGES[url];
     }
-    if(m){                                                               // backfill copy + author the sheet never captured
-      if((!f.example_text || !f.example_text.trim()) && m.text)   f.example_text=m.text;
-      if((!f.author      || !f.author.trim())      && m.author)   f.author=m.author;
-    }
+    if(m && (!f.author || !f.author.trim()) && m.author) f.author=m.author;
+    // Prefer the cleaned sheet copy; if the sheet only captured reactions, use the og copy instead.
+    const cleaned = stripSocial(f.example_text||"");
+    const metaText = (m && m.text) ? stripSocial(m.text) : "";
+    f.example_text = cleaned || metaText || "";
   });
   return rows;
 }
+// LinkedIn's social-proof header ("Jane Doe and 500 others reacted") sometimes gets captured
+// as the first lines of the post. Strip those leading lines so the real hook shows.
+const SOCIAL_RE=/(\band\s[\d,]+\s+others\b|reacted$|(commented on|reposted|shared) this$|(likes|loves|celebrates|supports|finds) this( insightful)?$|^[\d,]+\s+(reactions?|comments?|reposts?)$|^(Promoted|Following|\+?\s*Follow)$)/i;
+function stripSocial(t){
+  if(t==null) return "";
+  t=String(t);                                  // sheet cells can come back as Numbers/Booleans — never call .split on those
+  if(!t) return t;
+  const lines=t.split("\n"); let i=0;
+  while(i<lines.length){
+    const ln=lines[i].trim();
+    if(ln==="" || (ln.length<90 && SOCIAL_RE.test(ln))){ i++; continue; }
+    break;
+  }
+  return lines.slice(i).join("\n").trim();   // may be "" if the text was ONLY social-proof — caller decides the fallback
+}
+// The post body to show: clean sheet copy → else the real name (never the reactions).
+function bodyOf(f){ return stripSocial(f.example_text||"") || f.archetype || f.name || ""; }
 function dropEmpty(rows){   // hide saved posts that have neither copy nor image
   return (rows||[]).filter(f=>(f.example_text&&f.example_text.trim())||f.image);
 }
@@ -992,17 +981,36 @@ function announceNew(){   // "N formats added since you've been gone"
   if(seenCount!=null && now>seenCount){ const n=now-seenCount; toast(`${n} new format${n>1?"s":""} added since you were gone`,"&#10024;"); }
   seenCount=now; saveLS('fl_seenCount',now);
 }
-function ingest(rows){ SAVED=dropEmpty(fillImages(rows||[])); orderFormats(); refreshAll(); announceNew(); }
+const bootAt=Date.now(); let booted=false;
+// Apps Script serves the viewer inside an iframe, so key events don't reach it until it has
+// focus. Grab focus on boot + first hover so arrow keys work without a manual click first.
+function grabFocus(){ try{ window.focus(); const st=$("#stage"); if(st){ if(!st.hasAttribute("tabindex")) st.tabIndex=-1; st.focus({preventScroll:true}); } }catch(e){} }
+window.addEventListener("mousemove", grabFocus, {once:true});
+window.addEventListener("pointerdown", grabFocus, {once:true});
+function hideWelcome(){   // dismiss once real data is in — but show for ~1.2s min so it never just flashes
+  if(booted) return; booted=true;
+  const w=$("#welcome"); if(w) setTimeout(()=>w.classList.add("gone"), Math.max(0, 1200-(Date.now()-bootAt)));
+  grabFocus();
+}
+function ingest(rows){
+  try{ SAVED=dropEmpty(fillImages(rows||[])); orderFormats(); refreshAll(); announceNew(); }
+  catch(e){                                     // never let one bad saved row blank the whole app — show the library at least
+    try{ window.__showErr((e&&e.message||e)+((e&&e.stack)?(' | '+String(e.stack).split('\n')[1]):''), 'ingest'); }catch(_){}
+    SAVED=[]; FORMATS=BUNDLED.slice(); try{ refreshAll(); }catch(_){}
+  }
+  hideWelcome();
+}
 function loadLive(){
   if(window.google&&google.script&&google.script.run){
-    google.script.run.withSuccessHandler(rows=>ingest(rows)).withFailureHandler(()=>refreshAll()).getViewerData();
+    google.script.run.withSuccessHandler(rows=>ingest(rows)).withFailureHandler(()=>{ refreshAll(); hideWelcome(); }).getViewerData();
   } else { ingest(window.__MOCK_SAVED__||[]); }
 }
+setTimeout(hideWelcome, 4000);   // safety net if the sheet fetch hangs (failsafe script also covers catastrophic errors)
 let hiddenAt=0;   // refresh + re-announce when you return after being away a bit
 document.addEventListener("visibilitychange",()=>{
   if(document.hidden){ hiddenAt=Date.now(); }
   else if(Date.now()-hiddenAt > 15000){ loadLive(); }
 });
-refreshAll();
-loadLive();
+try{ refreshAll(); }catch(e){ try{window.__showErr((e&&e.message||e)+((e&&e.stack)?(' | '+String(e.stack).split('\n')[1]):''), 'boot.refreshAll');}catch(_){}}
+try{ loadLive(); }catch(e){ try{window.__showErr((e&&e.message||e), 'boot.loadLive');}catch(_){} hideWelcome(); }
 </script>

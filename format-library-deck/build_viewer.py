@@ -20,7 +20,7 @@ PREVIEW = os.path.join(HERE, "viewer.preview.html")
 def bundled_json():
     data = json.load(open(FORMATS, encoding="utf-8"))
     keep = [f for f in data if f.get("library") != "marghi"]   # Virio + Millie's (rich)
-    return json.dumps(keep, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    return json.dumps(keep, ensure_ascii=True, separators=(",", ":")).replace("</", "<\\/")
 
 def frog_data_uri():
     b64 = base64.b64encode(open(ICON, "rb").read()).decode("ascii")
@@ -29,12 +29,12 @@ def frog_data_uri():
 def post_images_json():
     p = os.path.join(HERE, "post_images.json")
     data = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {}
-    return json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    return json.dumps(data, ensure_ascii=True, separators=(",", ":")).replace("</", "<\\/")
 
 def post_meta_json():
     p = os.path.join(HERE, "post_meta.json")
     data = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {}
-    return json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    return json.dumps(data, ensure_ascii=True, separators=(",", ":")).replace("</", "<\\/")
 
 def build(txt):
     tpl = open(TEMPLATE, encoding="utf-8").read()
@@ -73,7 +73,7 @@ def sample_images():
 def main():
     data = json.load(open(FORMATS, encoding="utf-8"))
     keep = [f for f in data if f.get("library") != "marghi"]
-    txt = json.dumps(keep, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    txt = json.dumps(keep, ensure_ascii=True, separators=(",", ":")).replace("</", "<\\/")
     open(OUT, "w", encoding="utf-8").write(build(txt))
     print("wrote", OUT)
     if "--preview" in sys.argv:
@@ -84,7 +84,7 @@ def main():
         for j, f in enumerate(keep2):
             if not f.get("image"):          # real og:images win; samples only fill the gaps
                 f["image"] = imgs[j % len(imgs)]
-        txt2 = json.dumps(keep2, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+        txt2 = json.dumps(keep2, ensure_ascii=True, separators=(",", ":")).replace("</", "<\\/")
         mock = [
             {"name":"Founder origin story","library":"saved","person":"Marghi","lane":"TOFU",
              "note":"strong hook — great for Arceus","labels":["Arceus","Strong hook"],
@@ -96,7 +96,7 @@ def main():
              "reactions":"640","comments":"212","savedAt":(datetime.datetime.utcnow()-datetime.timedelta(days=20)).isoformat(),"examples":[{"url":"https://linkedin.com/y","meta":"saved by Millie"}]},
         ]
         preview = build(txt2).replace("let SAVED = [];",
-                                      "window.__MOCK_SAVED__=" + json.dumps(mock, ensure_ascii=False) + ";\nlet SAVED = [];")
+                                      "window.__MOCK_SAVED__=" + json.dumps(mock, ensure_ascii=True) + ";\nlet SAVED = [];")
         open(PREVIEW, "w", encoding="utf-8").write(preview)
         print("wrote", PREVIEW)
 
