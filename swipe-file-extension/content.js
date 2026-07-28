@@ -1,12 +1,13 @@
-// Save to My Formats — content script (v1.1.0)
+// Save to My Formats — content script (v1.3.0)
 // Anchors on each post's control-menu button, injects a "➕ My Formats" button,
 // and on click opens a form: name + funnel + labels (toggle chips from the sheet's
-// `labels` tab) + a free note. Saves name/link/funnel/note/labels to the `marghi` tab.
+// `labels` tab) + a free note. Captures the post itself too — author, full text, main
+// image, and social counts — so the live library can render it exactly like the feed.
 
 (function () {
   'use strict';
 
-  console.log('%c[MyFormats] content script v1.2.0 loaded', 'color:#0a66c2;font-weight:bold');
+  console.log('%c[MyFormats] content script v1.3.0 loaded', 'color:#0a66c2;font-weight:bold');
 
   var CM_SEL = 'button[aria-label^="Open control menu for post"]';
   var labelCache = null;
@@ -33,6 +34,42 @@
     return texts[0] || '';
   }
 
+  // The post's main image. Classes are hashed, so we score every <img>: keep LinkedIn
+  // media, drop avatars/logos/tiny icons, and take the largest (boosting real feedshare
+  // images). currentSrc picks the resolved srcset entry.
+  function findImage(w) {
+    var best = '', bestScore = 0;
+    [].slice.call(w.querySelectorAll('img')).forEach(function (im) {
+      var src = im.currentSrc || im.src || '';
+      if (!/licdn\.com|media\./i.test(src)) return;
+      if (/profile-displayphoto|profile-framedphoto|company-logo|EntityPhoto|\/aero-v1\/|ghost|static\.licdn/i.test(src)) return;
+      var r = im.getBoundingClientRect();
+      var area = (im.naturalWidth * im.naturalHeight) || (r.width * r.height);
+      var isFeed = /feedshare|dms\/image|image\/v2|image\/upload|article-cover/i.test(src);
+      if ((r.width < 120 || r.height < 120) && !isFeed) return;   // skip small chrome/avatars
+      var score = area * (isFeed ? 3 : 1);
+      if (score > bestScore) { bestScore = score; best = src; }
+    });
+    return best;
+  }
+
+  // Best-effort social proof — via aria-labels first (e.g. "1,234 reactions"), which
+  // survive class hashing better than text nodes. Blank when not found; the viewer copes.
+  function matchCount(w, word) {
+    var re = new RegExp('([\\d,\\.]+)\\s*' + word, 'i');
+    var nodes = [].slice.call(w.querySelectorAll('[aria-label]'));
+    for (var i = 0; i < nodes.length; i++) {
+      var m = (nodes[i].getAttribute('aria-label') || '').match(re);
+      if (m) return m[1].replace(/[.,]$/, '');
+    }
+    var spans = [].slice.call(w.querySelectorAll('span,button'));
+    for (var j = 0; j < spans.length; j++) {
+      var t = (spans[j].innerText || '').match(re);
+      if (t) return t[1].replace(/[.,]$/, '');
+    }
+    return '';
+  }
+
   function scanUrn(w) {
     var all = w.querySelectorAll('*');
     for (var a = 0; a < all.length; a++) {
@@ -45,11 +82,18 @@
     return null;
   }
 
-  // We only use post text locally (to prefill the name) — it is NOT saved to the sheet.
+  // Capture the post so the library can render it exactly like the LinkedIn feed:
+  // link, full text, main image, and social counts. Read at ➕-click while the node is fresh.
   function extract(cm) {
     var w = findWrapper(cm);
     var urn = scanUrn(w);
-    return { link: urn ? 'https://www.linkedin.com/feed/update/' + urn + '/' : '', text: longestText(w) };
+    return {
+      link: urn ? 'https://www.linkedin.com/feed/update/' + urn + '/' : '',
+      text: longestText(w),
+      image: findImage(w),
+      reactions: matchCount(w, 'reactions?'),
+      comments: matchCount(w, 'comments?')
+    };
   }
 
   function escapeHtml(s) {
@@ -135,11 +179,14 @@
     var stage = '';
     var selected = {};
 
+    var frogUrl = '';
+    try { frogUrl = chrome.runtime.getURL('icons/icon48.png'); } catch (e) {}
     overlay = document.createElement('div');
     overlay.className = 'sf-overlay';
     overlay.innerHTML =
       '<div class="sf-card" role="dialog" aria-label="Save to My Formats">' +
-        '<h3>Save to My Formats</h3>' +
+        '<div class="sf-head">' + (frogUrl ? '<img class="sf-frog" src="' + attr(frogUrl) + '" alt="">' : '') + '<h3>Save to My Formats</h3></div>' +
+        '<div class="sf-rule"></div>' +
         '<p class="sf-sub">' + (author ? 'From ' + escapeHtml(author) : 'LinkedIn post') + ' → your Format Library</p>' +
         '<label>Format name</label>' +
         '<input type="text" class="sf-name" value="' + attr(nameGuess) + '" placeholder="Name this format">' +
@@ -240,7 +287,12 @@
       saveBtn.disabled = true;
       saveBtn.textContent = 'Saving…';
 
-      var payload = { tab: 'marghi', formatType: name, funnel: stage, link: resolvedLink || d.link || '', note: note, labels: labels };
+      var payload = {
+        tab: 'marghi', formatType: name, funnel: stage, link: resolvedLink || d.link || '',
+        note: note, labels: labels,
+        author: author || '', text: d.text || '', image: d.image || '',
+        reactions: d.reactions || '', comments: d.comments || ''
+      };
       chrome.runtime.sendMessage({ type: 'SF_SAVE', payload: payload }, function (res) {
         close();
         if (res && res.ok !== false) toast('✓ Saved to My Formats');
@@ -271,9 +323,11 @@
       var existing = wrapper.querySelector(':scope > .sf-btn');
       var cr = cm.getBoundingClientRect(), wr = wrapper.getBoundingClientRect();
       if (!cr.width || !wr.width) return;
-      var top = (cr.top - wr.top) + 'px';
+      // Vertically center the button on the "…" menu (robust to a "liked by / commented on"
+      // header pushing the actor row down), and sit just to its left.
+      var top = (cr.top - wr.top + cr.height / 2) + 'px';
       var right = (wr.right - cr.left + 6) + 'px';
-      if (existing) { existing.style.top = top; existing.style.right = right; return; }
+      if (existing) { existing.style.top = top; existing.style.right = right; existing.style.transform = 'translateY(-50%)'; return; }
       var author = (cm.getAttribute('aria-label') || '').replace(/^Open control menu for post by\s*/i, '').trim();
       var btn = document.createElement('button');
       btn.className = 'sf-btn';
@@ -281,6 +335,7 @@
       btn.textContent = '➕ My Formats';
       btn.style.top = top;
       btn.style.right = right;
+      btn.style.transform = 'translateY(-50%)';
       btn.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();

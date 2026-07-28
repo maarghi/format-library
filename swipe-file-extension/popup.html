@@ -1,0 +1,161 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>My Formats</title>
+<style>
+  :root{
+    --paper:#FFF9ED;--paper-2:#F4EDD9;--card:#FFFDF8;--card-2:#F8F1DF;
+    --ink:#1B1B18;--ink-2:#565349;--ink-3:#8A8A86;--line:#E7DEC8;--line-2:#D8CDB2;
+    --gold:#D5B473;--frog:#5F964E;--ok:#127c3a;
+    --sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{width:372px;margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+    line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{padding:16px 16px 18px}
+
+  /* masthead */
+  .mast{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+  .mast .frog{width:28px;height:28px;border-radius:7px;display:block}
+  .mast h1{margin:0;font-size:17px;font-weight:800;letter-spacing:-.02em}
+  .mast .sub{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-top:1px}
+  .rule{height:3px;width:38px;background:var(--gold);margin:8px 0 2px;border-radius:2px}
+
+  /* saving-as banner */
+  .banner{display:none;align-items:center;gap:8px;background:var(--card-2);border:1px solid var(--line-2);
+    border-radius:10px;padding:9px 11px;margin:12px 0 2px;font-size:12.5px}
+  .banner.on{display:flex}
+  .banner .who{font-weight:700}
+  .banner .chg{margin-left:auto;font-size:11px;color:var(--ink-3);text-decoration:underline;cursor:pointer;background:none;border:0;font-family:inherit}
+  .banner .tick{color:var(--ok);font-weight:800}
+
+  .step{margin-top:16px}
+  .step .n{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .step .n b{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+  .step .n .done{color:var(--ok);font-size:12px;font-weight:800;display:none}
+  .step.complete .n .done{display:inline}
+  .step h2{margin:0;font-size:13.5px;font-weight:700}
+  .desc{font-size:11.5px;color:var(--ink-2);margin:0 0 9px;line-height:1.45}
+
+  select,input,textarea{width:100%;background:var(--card);color:var(--ink);border:1px solid var(--line-2);
+    border-radius:9px;font-family:inherit;font-size:13px;padding:9px 11px}
+  select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--ink-3) 50%),linear-gradient(135deg,var(--ink-3) 50%,transparent 50%);
+    background-position:calc(100% - 15px) 55%,calc(100% - 10px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:28px}
+  .row{display:flex;gap:7px}
+  .row > *{margin:0}
+  .btn{border:0;border-radius:9px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;padding:9px 13px}
+  .btn.dark{background:var(--ink);color:var(--paper)}
+  .btn.dark:hover{opacity:.92}
+  .btn.ghost{background:var(--card);border:1px solid var(--line-2);color:var(--ink);font-weight:600}
+  .btn.ghost:hover{background:var(--card-2)}
+  .hide{display:none}
+
+  /* labels */
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px}
+  .chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:600;
+    border:1px solid var(--line-2);background:var(--ink);color:var(--paper)}
+  .chip .x{cursor:pointer;opacity:.7;font-weight:800;font-size:13px;line-height:1}
+  .chip .x:hover{opacity:1}
+  .chip.suggest{background:var(--card);color:var(--ink-2);border-style:dashed;cursor:pointer}
+  .chip.suggest:hover{border-color:var(--frog);color:var(--ink)}
+  .chip .cat{font-family:var(--mono);font-size:9px;opacity:.55;text-transform:uppercase}
+  .muted{font-size:11px;color:var(--ink-3)}
+  .newlabel{display:flex;gap:6px;margin-top:2px}
+  .newlabel input{flex:1}
+  .newlabel select{width:96px}
+
+  /* links */
+  .links{display:flex;flex-direction:column;gap:8px}
+  a.link{display:flex;align-items:center;gap:10px;text-decoration:none;border-radius:11px;padding:11px 13px;
+    font-size:13.5px;font-weight:700;transition:transform .07s}
+  a.link:active{transform:translateY(1px)}
+  a.link.primary{background:var(--ink);color:var(--paper)}
+  a.link.primary:hover{opacity:.92}
+  a.link.second{background:var(--card);border:1px solid var(--line-2);color:var(--ink)}
+  a.link.second:hover{background:var(--card-2)}
+  a.link .ic{width:20px;height:20px;border-radius:5px;display:block;flex:none}
+  a.link .arrow{margin-left:auto;color:var(--ink-3);font-weight:600}
+  a.link.primary .arrow{color:var(--paper);opacity:.7}
+  a.link[aria-disabled="true"]{opacity:.5;pointer-events:none}
+
+  .tip{margin-top:16px;padding-top:12px;border-top:1px dashed var(--line);font-size:11.5px;color:var(--ink-2);line-height:1.5}
+  .tip b{color:var(--ink)}
+  .tip .plus{display:inline-block;background:var(--ink);color:var(--paper);border-radius:5px;padding:1px 6px;font-size:10.5px;font-weight:700}
+  .advanced{margin-top:12px}
+  .advanced summary{font-size:11px;color:var(--ink-3);cursor:pointer}
+  .advanced input{font-size:11px;padding:7px 9px;margin-top:7px}
+  .toast{position:fixed;left:50%;bottom:12px;transform:translateX(-50%) translateY(8px);background:var(--ink);color:var(--paper);
+    font-size:12px;font-weight:600;padding:8px 14px;border-radius:9px;opacity:0;transition:opacity .18s,transform .18s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+
+<div class="wrap">
+  <div class="mast">
+    <img class="frog" src="icons/icon48.png" alt="">
+    <div>
+      <h1>Format Library</h1>
+      <div class="sub">Save · organize · reuse</div>
+    </div>
+  </div>
+  <div class="rule"></div>
+
+  <div class="banner" id="banner">
+    <span class="tick">✓</span><span>Saving as <span class="who" id="bannerName"></span></span>
+    <button class="chg" id="changeName">change</button>
+  </div>
+
+  <!-- Step 1 -->
+  <section class="step" id="step1">
+    <div class="n"><b>Step 1</b><span class="done">✓ done</span></div>
+    <h2>Who are you?</h2>
+    <p class="desc">Your saves land in a tab with your name in the shared sheet. Pick yourself, or add your name.</p>
+    <select id="person"><option value="">Loading…</option></select>
+    <div class="row hide" id="newNameRow" style="margin-top:8px">
+      <input id="newName" type="text" placeholder="Your first name (e.g. Millie)" autocomplete="off">
+      <button class="btn dark" id="newNameAdd">Add</button>
+    </div>
+  </section>
+
+  <!-- Step 2 -->
+  <section class="step" id="step2">
+    <div class="n"><b>Step 2</b><span class="done">✓ done</span></div>
+    <h2>Your labels</h2>
+    <p class="desc">Labels let you filter the library — clients you write for, or the vibe of a post. Tap a suggestion or add your own.</p>
+    <div class="chips" id="curLabels"></div>
+    <div class="muted" id="suggestHint" style="margin-bottom:6px">Suggestions — tap to add:</div>
+    <div class="chips" id="suggestLabels"></div>
+    <div class="newlabel">
+      <input id="labelInput" type="text" placeholder="+ your own label" autocomplete="off">
+      <select id="labelCat"><option value="Client">Client</option><option value="Tag">Tag</option></select>
+      <button class="btn ghost" id="labelAdd">Add</button>
+    </div>
+  </section>
+
+  <!-- Step 3 -->
+  <section class="step" id="step3">
+    <div class="n"><b>Step 3</b></div>
+    <h2>Open your library</h2>
+    <div class="links">
+      <a class="link primary" id="viewerLink" target="_blank" rel="noopener">
+        <img class="ic" src="icons/icon48.png" alt=""><span>Open the Format Library</span><span class="arrow">↗</span>
+      </a>
+      <a class="link second" id="sheetLink" target="_blank" rel="noopener" aria-disabled="true">
+        <span class="ic">📄</span><span>Open my sheet tab</span><span class="arrow">↗</span>
+      </a>
+    </div>
+  </section>
+
+  <div class="tip">
+    <b>How to save:</b> on any LinkedIn post, click the
+    <span class="plus">➕ My Formats</span> button, pick a funnel stage &amp; labels, and hit save.
+  </div>
+
+  <details class="advanced">
+    <summary>Advanced — custom sheet endpoint</summary>
+    <input id="endpoint" type="text" placeholder="Leave blank to use the shared library">
+    <button class="btn ghost" id="endpointSave" style="margin-top:7px">Save endpoint</button>
+  </details>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="popup.js"></script>

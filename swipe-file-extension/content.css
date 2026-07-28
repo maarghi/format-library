@@ -1,61 +1,76 @@
-/* Injected button — absolutely placed at each post's top-right, just left of the "…" menu.
-   top/right are set per-post in content.js from the control-menu's measured position. */
+/* Injected "➕ My Formats" button — absolutely placed at each post's top-right, aligned
+   with the "…" control menu. top/right are set per-post in content.js. */
 .sf-btn {
   position: absolute; z-index: 30;
   display: inline-flex; align-items: center; gap: 5px;
-  background: #0a66c2; color: #fff; border: 0; border-radius: 999px;
+  background: #1B1B18; color: #FFF9ED; border: 0; border-radius: 999px;
   padding: 5px 11px; font: 700 12px/1 -apple-system, "Helvetica Neue", Arial, sans-serif;
-  cursor: pointer; box-shadow: 0 1px 5px rgba(0,0,0,.25); white-space: nowrap; transition: background .15s;
+  cursor: pointer; box-shadow: 0 1px 6px rgba(0,0,0,.28); white-space: nowrap; transition: background .15s;
 }
-.sf-btn:hover { background: #004182; }
+.sf-btn:hover { background: #000; }
 
-/* Save form overlay */
+/* ===== Save form — Virio-branded (cream / ink / gold), matches the popup ===== */
 .sf-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100000;
+  position: fixed; inset: 0; background: rgba(20,18,12,.5); z-index: 100000;
   display: flex; align-items: center; justify-content: center;
-  font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-family: "Helvetica Neue", -apple-system, Arial, sans-serif;
 }
 .sf-card {
-  background: #fff; color: #1a1a1a; width: min(440px, 92vw);
-  border-radius: 14px; padding: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  background: #FFF9ED; color: #1B1B18; width: min(452px, 92vw);
+  border: 1px solid #E7DEC8; border-radius: 16px; padding: 20px;
+  box-shadow: 0 26px 70px rgba(20,18,12,.4); max-height: 90vh; overflow-y: auto;
 }
-.sf-card { max-height: 90vh; overflow-y: auto; }
-.sf-card h3 { margin: 0 0 2px; font-size: 16px; }
-.sf-sub { margin: 0 0 6px; font-size: 12px; color: #666; }
-.sf-card label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #888; margin: 14px 0 5px; }
-.sf-name, .sf-note { width: 100%; box-sizing: border-box; padding: 9px 11px; border: 1px solid #ddd; border-radius: 9px; font-size: 14px; font-family: inherit; }
-.sf-note { resize: vertical; min-height: 56px; line-height: 1.4; }
+.sf-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.sf-head .sf-frog { width: 26px; height: 26px; border-radius: 7px; display: block; flex: none; }
+.sf-head h3 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -.01em; }
+.sf-rule { height: 3px; width: 38px; background: #D5B473; border-radius: 2px; margin: 8px 0 2px; }
+.sf-sub { margin: 0 0 4px; font-size: 12px; color: #8A8A86; }
+.sf-card label { display: block; font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: #9A8F70; margin: 18px 0 7px; }
+.sf-name, .sf-note {
+  width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #D8CDB2; border-radius: 10px;
+  font-size: 14px; font-family: inherit; background: #FFFDF8; color: #1B1B18;
+}
+.sf-name:focus, .sf-note:focus { outline: none; border-color: #D5B473; box-shadow: 0 0 0 3px rgba(213,180,115,.22); }
+.sf-note { resize: vertical; min-height: 56px; line-height: 1.45; }
+
+/* funnel stage */
+.sf-stages { display: flex; gap: 8px; }
+.sf-stages button { flex: 1; padding: 10px; border: 1px solid #D8CDB2; border-radius: 10px; background: #FFFDF8;
+  font-weight: 700; font-size: 13px; color: #1B1B18; cursor: pointer; }
+.sf-stages button[aria-pressed="true"] { background: #1B1B18; color: #FFF9ED; border-color: #1B1B18; }
 
 /* labels */
 .sf-labels { display: flex; flex-direction: column; gap: 8px; }
-.sf-loading { font-size: 12px; color: #999; }
+.sf-loading { font-size: 12px; color: #9A8F70; }
 .sf-lgroup { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.sf-lcat { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #aaa; width: 100%; }
-.sf-chip { display: inline-flex; align-items: center; gap: 3px; background: #fff; color: #333; border: 1px solid #d0d0d0; border-radius: 999px; padding: 4px 6px 4px 11px; font-size: 12.5px; font-weight: 600; }
-.sf-chip.on { background: #0a66c2; color: #fff; border-color: #0a66c2; }
+.sf-lcat { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: #B3A98F; width: 100%; }
+.sf-chip { display: inline-flex; align-items: center; gap: 3px; background: #FFFDF8; color: #565349; border: 1px solid #D8CDB2; border-radius: 999px; padding: 4px 6px 4px 11px; font-size: 12.5px; font-weight: 600; }
+.sf-chip.on { background: #1B1B18; color: #FFF9ED; border-color: #1B1B18; }
 .sf-chip-name { cursor: pointer; }
 .sf-chip-x { cursor: pointer; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 14px; line-height: 1; opacity: .45; }
 .sf-chip-x:hover { opacity: 1; background: rgba(0,0,0,.12); }
 .sf-chip.on .sf-chip-x { opacity: .7; }
 .sf-chip.on .sf-chip-x:hover { background: rgba(255,255,255,.28); opacity: 1; }
 .sf-newlabel { display: flex; gap: 6px; margin-top: 8px; }
-.sf-newlabel-input { flex: 1; min-width: 0; padding: 7px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
-.sf-newlabel-cat { border: 1px solid #ddd; border-radius: 8px; font-size: 13px; padding: 0 6px; }
-.sf-newlabel-add { background: #eef3f8; color: #0a66c2; border: 1px solid #cfe0ef; border-radius: 8px; font-weight: 700; font-size: 13px; padding: 7px 12px; cursor: pointer; }
-.sf-stages { display: flex; gap: 8px; }
-.sf-stages button { flex: 1; padding: 9px; border: 1px solid #ddd; border-radius: 9px; background: #fff; font-weight: 600; font-size: 13px; cursor: pointer; }
-.sf-stages button[aria-pressed="true"] { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
-.sf-preview { font-size: 12px; color: #555; background: #f6f6f4; border-radius: 9px; padding: 9px 11px; margin-top: 12px; max-height: 84px; overflow: auto; white-space: pre-wrap; }
-.sf-actions { display: flex; gap: 8px; margin-top: 16px; }
-.sf-actions button { flex: 1; padding: 10px; border-radius: 9px; border: 0; font-weight: 700; font-size: 14px; cursor: pointer; }
-.sf-save { background: #0a66c2; color: #fff; }
-.sf-save:disabled { background: #9db8d6; cursor: default; }
-.sf-cancel { background: #eee; color: #333; }
+.sf-newlabel-input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid #D8CDB2; border-radius: 9px; font-size: 13px; background: #FFFDF8; color: #1B1B18; }
+.sf-newlabel-cat { border: 1px solid #D8CDB2; border-radius: 9px; font-size: 13px; padding: 0 6px; background: #FFFDF8; color: #1B1B18; }
+.sf-newlabel-add { background: #1B1B18; color: #FFF9ED; border: 0; border-radius: 9px; font-weight: 700; font-size: 13px; padding: 8px 14px; cursor: pointer; }
+.sf-newlabel-add:hover { opacity: .92; }
+
+.sf-preview { font-size: 12px; color: #565349; background: #F4EDD9; border: 1px solid #E7DEC8; border-radius: 10px; padding: 9px 11px; margin-top: 12px; max-height: 84px; overflow: auto; white-space: pre-wrap; }
+.sf-actions { display: flex; gap: 8px; margin-top: 18px; }
+.sf-actions button { flex: 1; padding: 11px; border-radius: 10px; border: 0; font-weight: 700; font-size: 14px; cursor: pointer; }
+.sf-save { background: #1B1B18; color: #FFF9ED; }
+.sf-save:hover:not(:disabled) { opacity: .92; }
+.sf-save:disabled { background: #CFC4A8; color: #8A8A86; cursor: default; }
+.sf-cancel { background: #EFE7D6; color: #565349; }
+.sf-cancel:hover { background: #E7DEC8; }
 
 /* Toast */
 .sf-toast {
   position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
-  background: #1a1a1a; color: #fff; padding: 11px 18px; border-radius: 10px;
-  font: 600 13px/1.3 -apple-system, "Helvetica Neue", Arial, sans-serif;
-  z-index: 100001; box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  background: #1B1B18; color: #FFF9ED; padding: 11px 18px; border-radius: 10px;
+  font: 600 13px/1.3 "Helvetica Neue", -apple-system, Arial, sans-serif;
+  z-index: 100001; box-shadow: 0 10px 30px rgba(20,18,12,.4);
 }

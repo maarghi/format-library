@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Save to My Formats",
-  "version": "1.2.0",
-  "description": "One-click save LinkedIn post formats — link, funnel stage, labels, and a note — to your My Formats Google Sheet.",
+  "version": "1.3.0",
+  "description": "One-click save LinkedIn posts — the full post, image, funnel stage, labels, and a note — to your team's live Format Library.",
   "permissions": ["storage"],
   "host_permissions": [
     "https://www.linkedin.com/*",
@@ -19,5 +19,20 @@
     }
   ],
   "options_page": "options.html",
-  "action": { "default_title": "Save to My Formats — set your Sheet URL in Options, then use the ➕ button on any post" }
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "My Formats — click to set up & open your library",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  }
 }

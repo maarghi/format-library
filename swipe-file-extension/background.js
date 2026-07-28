@@ -18,6 +18,13 @@ function postJson(url, body, sendResponse) {
     .catch(function (e) { sendResponse({ ok: true, soft: String(e) }); }); // assume delivered; verify in sheet
 }
 
+function getJson(url, sendResponse, fallback) {
+  fetch(url, { method: 'GET' })
+    .then(function (r) { return r.json(); })
+    .then(sendResponse)
+    .catch(function (e) { sendResponse(fallback || { ok: false, error: String(e) }); });
+}
+
 chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
   if (!msg) return;
 
@@ -36,6 +43,29 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
 
   if (msg.type === 'SF_DELETE_LABEL') {
     cfg(function (url) { postJson(url, { action: 'deleteLabel', label: msg.label }, sendResponse); });
+    return true;
+  }
+
+  // Popup onboarding: which people (tabs) already exist in the shared sheet.
+  if (msg.type === 'SF_PEOPLE') {
+    cfg(function (url) {
+      getJson(url + (url.indexOf('?') > -1 ? '&' : '?') + 'action=people', sendResponse, { ok: true, people: [] });
+    });
+    return true;
+  }
+
+  // Popup onboarding: create (or find) this person's tab and get its gid for a deep link.
+  if (msg.type === 'SF_ENSURE_TAB') {
+    cfg(function (url) {
+      var u = url + (url.indexOf('?') > -1 ? '&' : '?') + 'action=ensureTab&name=' + encodeURIComponent(msg.name || '');
+      getJson(u, sendResponse, { ok: false });
+    });
+    return true;
+  }
+
+  // Popup needs the live endpoint (= the Format Library viewer URL) to build links.
+  if (msg.type === 'SF_ENDPOINT') {
+    cfg(function (url) { sendResponse({ ok: true, endpoint: url }); });
     return true;
   }
 
