@@ -1,4 +1,3 @@
-<meta charset="utf-8">
 <title>Format Library</title>
 <link rel="icon" type="image/png" href="__FROG_ICON__">
 <link rel="apple-touch-icon" href="__FROG_ICON__">
@@ -339,7 +338,6 @@
         b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#b00020;color:#fff;font:600 13px/1.5 ui-monospace,monospace;padding:12px 16px;white-space:pre-wrap;max-height:45vh;overflow:auto';
         document.body.appendChild(b); }
       b.textContent += '⚠ ['+(where||'')+'] '+msg+'\n';
-      clearTimeout(window.__errT); window.__errT=setTimeout(function(){ if(b&&b.parentNode) b.parentNode.removeChild(b); }, 10000);   // auto-dismiss 10s after the last error
     }catch(_){}
   };
   window.addEventListener('error', function(e){
@@ -795,14 +793,10 @@ function openSheet(f){
     if(cc && cc.value!==(state.client||"")){ setClient(cc.value); if(ci) ci.value=getIcp(state.client); if(cpv){ cpv.value=buildPrompt(f); promptDirty=false; } refreshBadge(); }
     return (promptDirty && cpv) ? cpv.value : buildPrompt(f);
   }
-  // Two SEPARATE actions, no coupling: "Copy prompt" puts the CURRENT prompt on your clipboard
-  // and confirms it worked; "Open Claude" just opens a blank /new chat. Copy → open → paste.
-  const sayCopied=(ok)=>toast(ok===false?"Copy failed — select the prompt and press ⌘C":("Prompt copied"+(state.client?" · "+state.client:"")), ok===false?"&#9888;":"&#128203;");
-  const cpBtn=$("#cp"); if(cpBtn) cpBtn.onclick=()=>{ copy(currentPrompt()).then(sayCopied); };
-  // Open Claude: set href in JS (a hardcoded href in the markup gets stripped by the Apps Script
-  // sandbox, which removed the button). It ONLY opens a fresh blank tab — never copies — so no stale path.
+  $("#cp").onclick=()=>{ copy(currentPrompt()); toast("Prompt copied"+(state.client?" · "+state.client:""),"&#128228;"); };
+  // "Open Claude" opens a fresh BLANK chat (no ?q= prefill) — Copy prompt, then paste it in.
   const oc=$("#openClaude");
-  if(oc){ oc.href="https://claude.ai/new"; oc.onclick=()=>toast("Opening Claude — paste your copied prompt","&#10022;"); }
+  if(oc){ oc.onclick=(e)=>{ e.preventDefault(); window.open("https:/"+"/claude.ai/new","_blank","noopener"); toast("Opening Claude — paste your copied prompt","&#10022;"); }; }
 }
 function composerHTML(){
   const opts=['<option value="">— generic / no client —</option>'].concat(CLIENTS.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`)).join("");
@@ -812,7 +806,7 @@ function composerHTML(){
     <label class="dlabel">ICP / target reader <span class="dhint">remembered per client</span></label>
     <textarea id="cIcp" class="dinput mini" placeholder="Who is this client's ideal reader? e.g. Series A founders, 10–50 eng, drowning in hiring…"></textarea>
     <label class="dlabel">Optional instructions for Claude</label>
-    <label class="dcheck"><input type="checkbox" id="cInterview"> Draft from my most recent content interview with this client</label>
+    <label class="dcheck"><input type="checkbox" id="cInterview"> Use material from my latest content-interview call</label>
     <textarea id="cSource" class="dinput mini" placeholder="e.g. use the story about the failed launch · keep it under 150 words"></textarea>
     <label class="dlabel">Claude prompt <span class="dhint">editable</span></label>
     <textarea id="cPrompt" class="dinput promptbox" spellcheck="false"></textarea>
@@ -844,10 +838,12 @@ function buildPrompt(f){
   const icp=(state.client?getIcp(state.client):"").trim();
   const icpLine=icp?`\nICP / target reader: ${icp}`:"";
   const clientLine=(state.client?`Pull ${state.client}'s context file and recent Fathom calls / content interviews for voice, proof, and specifics.`:`If this is for a specific client, load their context file and recent Fathom calls first.`)+(icp?` Write for this ICP: ${icp}.`:"");
+  const url0=(f.examples&&f.examples[0])?f.examples[0].url:"";
   const imgLine=f.image?`\nPOST IMAGE (look at how the visual complements the copy, and suggest a matching visual): ${f.image}`:"";
   if(f.library==="saved"||f.linkOnly){
     return `Reverse-engineer this viral LinkedIn post's format for ${who}.
 
+REFERENCE POST: ${url0}
 Funnel stage: ${f.lane}${icpLine}${imgLine}
 Name: ${f.name}${f.author?`\nOriginal author: ${f.author}`:""}${f.example_text?`\n\nPOST TEXT:\n"""\n${f.example_text}\n"""`:""}
 
@@ -887,8 +883,8 @@ function parseMeta(m){m=m||"";
   const dm=m.match(/(\d{4}-\d{2}-\d{2})|([A-Za-z]{3,9}\s+\d{4})/); return {author,org,react,comm,date:dm?dm[0]:""};
 }
 function clip(s,n){s=s||"";return s.length>n?s.slice(0,n-1)+"…":s;}
-function copy(t){if(navigator.clipboard&&navigator.clipboard.writeText){return navigator.clipboard.writeText(t).then(()=>true).catch(()=>fallbackCopy(t));}return Promise.resolve(fallbackCopy(t));}
-function fallbackCopy(t){const ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy");}catch(e){}document.body.removeChild(ta);return ok;}
+function copy(t){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).catch(()=>fallbackCopy(t));}else fallbackCopy(t);}
+function fallbackCopy(t){const ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);}
 let toastT; function toast(msg,em){const t=$("#toast");t.innerHTML=`<span class="em">${em||""}</span>${esc(msg)}`;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2200);}
 
 // ---------- drafting queue + per-client ICP (persisted) ----------
