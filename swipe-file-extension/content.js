@@ -7,23 +7,71 @@
 (function () {
   'use strict';
 
-  console.log('%c[MyFormats] content script v1.3.0 loaded', 'color:#0a66c2;font-weight:bold');
+  console.log('%c[MyFormats] content script v1.6.0 loaded', 'color:#0a66c2;font-weight:bold');
 
   var CM_SEL = 'button[aria-label^="Open control menu for post"]';
   var labelCache = null;
 
   // ---------- post location + extraction ----------
+  var URN_RE = /urn:li:(activity|share|ugcPost):\d+/;
+
+  // True when this element itself carries a post URN in one of its attributes.
+  function hasUrn(el) {
+    if (!el || !el.attributes) return false;
+    for (var i = 0; i < el.attributes.length; i++) {
+      if (URN_RE.test(el.attributes[i].value || '')) return true;
+    }
+    return false;
+  }
+
+  // Find the element that IS the post. Walking up to a urn-bearing ancestor works on
+  // every surface (main feed, single-post page, profile activity, search, notifications).
+  // The old version looked for a FeedType_MAIN_FEED marker that only exists in the feed,
+  // then blind-guessed six levels up everywhere else, which is why links went missing.
+  function urnOf(el) {
+    if (!el || !el.attributes) return null;
+    for (var b = 0; b < el.attributes.length; b++) {
+      var m = (el.attributes[b].value || '').match(URN_RE);
+      if (m) return m[0];
+    }
+    return null;
+  }
+
+  // Check the wrapper itself before its children. On a reshare the outer post and the
+  // quoted post both carry URNs, and the outer one is the post being saved.
+  function scanUrn(w) {
+    var own = urnOf(w);
+    if (own) return own;
+    var all = w.querySelectorAll('*');
+    for (var a = 0; a < all.length; a++) {
+      var m = urnOf(all[a]);
+      if (m) return m;
+    }
+    return null;
+  }
   function findWrapper(cm) {
-    var node = cm;
-    for (var i = 0; i < 16 && node; i++) {
+    // The wrapper must be ONE post: it needs a real layout box (so the button can be
+    // positioned) and a resolvable URN inside it (so the link is that post's).
+    //
+    // Two traps this avoids, both seen live on profile pages:
+    //  - climbing into the <ul> that holds every post, so all 10 posts shared one
+    //    wrapper and only the first ever got a button;
+    //  - stopping on an <li> styled display:contents, which has no box at all, so the
+    //    width check skipped every post.
+    var node = cm, boxedBest = null;
+    for (var i = 0; i < 20 && node; i++) {
       node = node.parentElement;
       if (!node) break;
-      var ck = node.getAttribute && node.getAttribute('componentkey');
-      if (ck && ck.indexOf('FeedType_MAIN_FEED') > -1) return node;
+      if (node.querySelectorAll(CM_SEL).length > 1) break;   // would span several posts
+      var r = node.getBoundingClientRect();
+      var isBoxed = r.width > 0 && r.height > 0;
+      if (isBoxed && !boxedBest) boxedBest = node;
+      if (isBoxed && scanUrn(node)) return node;             // box AND link: the post
     }
-    node = cm;
-    for (var j = 0; j < 6 && node.parentElement; j++) node = node.parentElement;
-    return node;
+    if (boxedBest) return boxedBest;
+    var n = cm;
+    for (var j = 0; j < 6 && n.parentElement; j++) n = n.parentElement;
+    return n;
   }
 
   // Strip LinkedIn's social-proof header ("Jane Doe and 500 others reacted") that can lead the text.
@@ -85,17 +133,7 @@
     return '';
   }
 
-  function scanUrn(w) {
-    var all = w.querySelectorAll('*');
-    for (var a = 0; a < all.length; a++) {
-      var el = all[a];
-      for (var b = 0; b < el.attributes.length; b++) {
-        var m = (el.attributes[b].value || '').match(/urn:li:(activity|share|ugcPost):\d+/);
-        if (m) return m[0];
-      }
-    }
-    return null;
-  }
+
 
   // Capture the post so the library can render it exactly like the LinkedIn feed:
   // link, full text, main image, and social counts. Read at ➕-click while the node is fresh.
@@ -139,16 +177,16 @@
       setTimeout(function () {
         var items = [].slice.call(document.querySelectorAll('[role="menuitem"]'));
         var copy = null;
-        for (var i = 0; i < items.length; i++) { if (/copy link to post/i.test(items[i].textContent || '')) { copy = items[i]; break; } }
+        for (var i = 0; i < items.length; i++) { if (/copy link/i.test(items[i].textContent || '')) { copy = items[i]; break; } }
         if (!copy) { finish(''); return; }
         copy.click();
         var tries = 0;
         var iv = setInterval(function () {
           tries++;
           var link = readToast();
-          if (link || tries >= 16) { clearInterval(iv); finish(link); }
+          if (link || tries >= 34) { clearInterval(iv); finish(link); }
         }, 150);
-      }, 420);
+      }, 600);
     } catch (e) { finish(''); }
   }
 
@@ -205,6 +243,10 @@
         '<p class="sf-sub">' + (author ? 'From ' + escapeHtml(author) : 'LinkedIn post') + ' → your Format Library</p>' +
         '<label>Format name</label>' +
         '<input type="text" class="sf-name" value="' + attr(nameGuess) + '" placeholder="Name this format">' +
+        '<label>Post link' + (resolvedLink ? '' : ' &mdash; not detected, paste it') + '</label>' +
+        '<input type="text" class="sf-link" value="' + attr(resolvedLink || '') + '"' +
+          ' placeholder="https://www.linkedin.com/feed/update/urn:li:activity:..."' +
+          (resolvedLink ? '' : ' style="border-color:#b8412d;background:#fff6f4"') + '>' +
         '<label>Funnel stage</label>' +
         '<div class="sf-stages">' +
           '<button type="button" data-s="TOFU">TOFU</button>' +
@@ -302,8 +344,17 @@
       saveBtn.disabled = true;
       saveBtn.textContent = 'Saving…';
 
+      var linkField = overlay.querySelector('.sf-link');
+      var link = (linkField && linkField.value.trim()) || resolvedLink || d.link || '';
+      if (!link) {
+        toast('\u26a0 No post link. Paste it before saving.');
+        if (linkField) { linkField.focus(); linkField.style.borderColor = '#b8412d'; }
+        saveBtn.disabled = false; saveBtn.textContent = 'Save';
+        return;
+      }
+
       var payload = {
-        tab: 'marghi', formatType: name, funnel: stage, link: resolvedLink || d.link || '',
+        tab: 'marghi', formatType: name, funnel: stage, link: link,
         note: note, labels: labels,
         author: author || '', text: d.text || '', image: d.image || '',
         reactions: d.reactions || '', comments: d.comments || ''
@@ -362,10 +413,47 @@
   }
 
   var pending = null;
-  var mo = new MutationObserver(function () {
+  function schedule(delay) {
     if (pending) return;
-    pending = setTimeout(function () { pending = null; inject(); }, 400);
-  });
+    pending = setTimeout(function () { pending = null; inject(); }, delay || 400);
+  }
+
+  var mo = new MutationObserver(function () { schedule(400); });
   mo.observe(document.documentElement, { childList: true, subtree: true });
-  inject();
+
+  // LinkedIn is a single-page app: clicking into a profile, a post, or search never
+  // reloads the page. The old code ran inject() once at load and then only on DOM
+  // mutations. On a route change that single pass can land before layout finishes, the
+  // width checks read 0, every post is skipped, mutations stop, and nothing runs again.
+  // That is why the button vanished until a hard refresh.
+  //
+  // Fix: on every route change, retry on a short ladder so at least one attempt lands
+  // after layout. A slow heartbeat then self-heals anything still missed.
+  function burst() {
+    [0, 250, 600, 1200, 2000, 3200].forEach(function (ms) { setTimeout(inject, ms); });
+  }
+
+  var lastUrl = location.href;
+  function checkUrl() {
+    if (location.href === lastUrl) return;
+    lastUrl = location.href;
+    burst();
+  }
+
+  ['pushState', 'replaceState'].forEach(function (m) {
+    var orig = history[m];
+    if (typeof orig !== 'function') return;
+    history[m] = function () {
+      var r = orig.apply(this, arguments);
+      try { checkUrl(); } catch (e) {}
+      return r;
+    };
+  });
+  window.addEventListener('popstate', checkUrl);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) burst(); });
+
+  setInterval(checkUrl, 500);    // catches route changes the history hooks miss
+  setInterval(function () { if (!document.hidden) inject(); }, 3000);   // heartbeat, idle in background tabs
+
+  burst();
 })();
