@@ -7,9 +7,33 @@
 (function () {
   'use strict';
 
-  console.log('%c[MyFormats] content script v1.6.0 loaded', 'color:#0a66c2;font-weight:bold');
+  console.log('%c[MyFormats] content script v1.6.5 loaded', 'color:#0a66c2;font-weight:bold');
 
-  var CM_SEL = 'button[aria-label^="Open control menu for post"]';
+  // When the extension is reloaded, Chrome cannot kill the content script already
+  // running in an open tab. It keeps going with a dead extension context, so its
+  // buttons hang forever on save. The service worker now re-injects a fresh copy into
+  // every open LinkedIn tab, which means two instances briefly share this isolated
+  // world. Both see window.__SF_GEN, so the older one can notice it has been superseded
+  // and stand down. No refresh needed.
+  var SF_GEN = (window.__SF_GEN = (window.__SF_GEN || 0) + 1);
+  var timers = [];
+  function alive() {
+    if (window.__SF_GEN !== SF_GEN) return false;          // a newer instance took over
+    try { return !!(chrome.runtime && chrome.runtime.id); } // extension still reachable
+    catch (e) { return false; }
+  }
+  function standDown() {
+    timers.forEach(clearInterval); timers = [];
+    try { if (mo) mo.disconnect(); } catch (e) {}
+  }
+  // A fresh instance owns the page: clear the previous generation's buttons.
+  if (SF_GEN > 1) {
+    [].slice.call(document.querySelectorAll('.sf-btn')).forEach(function (b) { b.remove(); });
+  }
+
+  // Widened from 'Open control menu for post' — some surfaces label it differently and
+  // a post with no matching menu simply never gets a button.
+  var CM_SEL = 'button[aria-label^="Open control menu"]';
   var labelCache = null;
 
   // ---------- post location + extraction ----------
@@ -344,6 +368,15 @@
       saveBtn.disabled = true;
       saveBtn.textContent = 'Saving…';
 
+      // A content script left over from an extension reload can never reach the service
+      // worker: sendMessage's callback simply never fires and the button sits on
+      // "Saving..." forever. chrome.runtime.id is undefined once the context is dead.
+      if (!chrome.runtime || !chrome.runtime.id) {
+        toast('\u26a0 Extension was reloaded. Refresh this page (Cmd+Shift+R), then save.');
+        saveBtn.disabled = false; saveBtn.textContent = 'Save';
+        return;
+      }
+
       var linkField = overlay.querySelector('.sf-link');
       var link = (linkField && linkField.value.trim()) || resolvedLink || d.link || '';
       if (!link) {
@@ -359,10 +392,29 @@
         author: author || '', text: d.text || '', image: d.image || '',
         reactions: d.reactions || '', comments: d.comments || ''
       };
+      var settled = false;
+      function fail(msg) {
+        if (settled) return; settled = true;
+        toast('\u26a0 ' + msg);
+        saveBtn.disabled = false; saveBtn.textContent = 'Save';
+      }
+      var timer = setTimeout(function () {
+        fail('Save timed out after 20s. Refresh the page and try again.');
+      }, 20000);
+
       chrome.runtime.sendMessage({ type: 'SF_SAVE', payload: payload }, function (res) {
-        close();
-        if (res && res.ok !== false) toast('✓ Saved to My Formats');
-        else toast('⚠ ' + ((res && res.error) || 'Save failed — check the extension Options'));
+        if (settled) return; settled = true;
+        clearTimeout(timer);
+        if (chrome.runtime.lastError) {
+          saveBtn.disabled = false; saveBtn.textContent = 'Save';
+          toast('\u26a0 ' + chrome.runtime.lastError.message + ' — refresh the page.');
+          return;
+        }
+        if (res && res.ok !== false) { close(); toast('\u2713 Saved to My Formats'); }
+        else {
+          saveBtn.disabled = false; saveBtn.textContent = 'Save';
+          toast('\u26a0 ' + ((res && res.error) || 'Save failed — check the extension Options'));
+        }
       });
     });
   }
@@ -382,8 +434,26 @@
   }
 
   // ---------- inject the button on each post ----------
+  var DEBUG = false;
+  try { DEBUG = localStorage.getItem('SF_DEBUG') === '1'; } catch (e) {}
+  var lastLog = '';
+  function debugLog() {
+    if (!DEBUG) return;
+    function vis(e) { var r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; }
+    var menus = [].slice.call(document.querySelectorAll(CM_SEL));
+    var btns = [].slice.call(document.querySelectorAll('.sf-btn'));
+    var line = location.pathname.slice(0, 40) +
+      '  menus ' + menus.filter(vis).length + '/' + menus.length +
+      '  buttons ' + btns.filter(vis).length + '/' + btns.length;
+    if (line === lastLog) return;                  // only log when something changed
+    lastLog = line;
+    console.log('%c[MyFormats] ' + line, 'color:#0a66c2');
+  }
+
   function inject() {
+    if (!alive()) { if (DEBUG) console.log('%c[MyFormats] stood down (superseded or context dead)', 'color:#b8412d'); standDown(); return; }
     [].slice.call(document.querySelectorAll(CM_SEL)).forEach(function (cm) {
+      try {
       var wrapper = findWrapper(cm);
       if (!wrapper) return;
       var existing = wrapper.querySelector(':scope > .sf-btn');
@@ -409,16 +479,23 @@
       });
       if (getComputedStyle(wrapper).position === 'static') wrapper.style.position = 'relative';
       wrapper.appendChild(btn);
+      } catch (err) {
+        // One awkward post must never abort the whole pass, which would leave every
+        // later post on the page without a button and no visible error.
+        if (DEBUG) console.warn('[MyFormats] skipped a post:', err && err.message);
+      }
     });
+    debugLog();
   }
 
+  var mo = null;
   var pending = null;
   function schedule(delay) {
     if (pending) return;
     pending = setTimeout(function () { pending = null; inject(); }, delay || 400);
   }
 
-  var mo = new MutationObserver(function () { schedule(400); });
+  mo = new MutationObserver(function () { if (!alive()) { standDown(); return; } schedule(400); });
   mo.observe(document.documentElement, { childList: true, subtree: true });
 
   // LinkedIn is a single-page app: clicking into a profile, a post, or search never
@@ -430,6 +507,14 @@
   // Fix: on every route change, retry on a short ladder so at least one attempt lands
   // after layout. A slow heartbeat then self-heals anything still missed.
   function burst() {
+    // A route change leaves the previous page's buttons in the DOM, attached to nodes
+    // that are now hidden or detached. They then confuse the next pass: a stale button
+    // can sit inside a wrapper the injector picks for a NEW post, which sees a button
+    // already there and just repositions the dead one. Wiping first means every post on
+    // the new page is evaluated from scratch.
+    try {
+      [].slice.call(document.querySelectorAll('.sf-btn')).forEach(function (b) { b.remove(); });
+    } catch (e) {}
     [0, 250, 600, 1200, 2000, 3200].forEach(function (ms) { setTimeout(inject, ms); });
   }
 
@@ -437,6 +522,7 @@
   function checkUrl() {
     if (location.href === lastUrl) return;
     lastUrl = location.href;
+    if (DEBUG) console.log('%c[MyFormats] route -> ' + location.pathname.slice(0, 44), 'color:#8a6d3b');
     burst();
   }
 
@@ -452,8 +538,8 @@
   window.addEventListener('popstate', checkUrl);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) burst(); });
 
-  setInterval(checkUrl, 500);    // catches route changes the history hooks miss
-  setInterval(function () { if (!document.hidden) inject(); }, 3000);   // heartbeat, idle in background tabs
+  timers.push(setInterval(function () { if (!alive()) { standDown(); return; } checkUrl(); }, 500));
+  timers.push(setInterval(function () { if (!document.hidden) inject(); }, 3000));   // heartbeat
 
   burst();
 })();

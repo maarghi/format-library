@@ -84,3 +84,20 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
     return true;
   }
 });
+
+// Re-inject into already-open LinkedIn tabs whenever the extension is installed,
+// updated or reloaded. Without this the old content script keeps running with a dead
+// context and every save hangs on "Saving..." until the user hard-refreshes.
+chrome.runtime.onInstalled.addListener(function () {
+  try {
+    chrome.tabs.query({ url: 'https://www.linkedin.com/*' }, function (tabs) {
+      (tabs || []).forEach(function (t) {
+        if (!t.id) return;
+        try {
+          chrome.scripting.insertCSS({ target: { tabId: t.id }, files: ['content.css'] }, function () { void chrome.runtime.lastError; });
+          chrome.scripting.executeScript({ target: { tabId: t.id }, files: ['content.js'] }, function () { void chrome.runtime.lastError; });
+        } catch (e) {}
+      });
+    });
+  } catch (e) {}
+});
