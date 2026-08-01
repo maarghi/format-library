@@ -139,7 +139,9 @@
   .li-text{font-size:13.5px;line-height:1.5;color:var(--li-text);white-space:pre-wrap;word-wrap:break-word}
   .li-text.clamped{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .li-media{margin:11px -17px 0;border-top:1px solid var(--li-line);background:#f3f2ef;line-height:0}
-  .li-media img{display:block;width:100%;height:auto;max-height:460px;object-fit:cover}
+  /* cap derives from the card's own max-height (100vh - 220px) minus 236px of head/text/stats/actions
+     chrome — a fixed cap lets the image outgrow the card and push the engagement row out of view */
+  .li-media img{display:block;width:100%;height:auto;max-height:min(460px,calc(100vh - 460px));object-fit:cover}
   .li-stats{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--li-muted);padding:9px 0;margin-top:10px;border-top:1px solid var(--li-line)}
   .li-reacts{display:inline-flex;align-items:center}
   .li-reacts .rd{width:17px;height:17px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px;margin-right:-5px;border:1.5px solid #fff}
@@ -794,7 +796,7 @@ function openSheet(f){
   $("#cp").onclick=()=>{ copy(currentPrompt()); toast("Prompt copied"+(state.client?" · "+state.client:""),"&#128228;"); };
   // "Open Claude" opens a fresh BLANK chat (no ?q= prefill) — Copy prompt, then paste it in.
   const oc=$("#openClaude");
-  if(oc){ oc.href="https://claude.ai/new"; oc.onclick=()=>toast("Opening Claude — paste your copied prompt","&#10022;"); }
+  if(oc){ oc.onclick=(e)=>{ e.preventDefault(); window.open("https:/"+"/claude.ai/new","_blank","noopener"); toast("Opening Claude — paste your copied prompt","&#10022;"); }; }
 }
 function composerHTML(){
   const opts=['<option value="">— generic / no client —</option>'].concat(CLIENTS.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`)).join("");
@@ -846,9 +848,9 @@ Funnel stage: ${f.lane}${icpLine}${imgLine}
 Name: ${f.name}${f.author?`\nOriginal author: ${f.author}`:""}${f.example_text?`\n\nPOST TEXT:\n"""\n${f.example_text}\n"""`:""}
 
 STEP 1 — Extract its format: the hook pattern, the block-by-block skeleton, the rhythm/formatting, and why it works.
-STEP 2 — Write 2–3 candidate posts that follow that same format in ${who}'s voice, at the ${f.lane} funnel stage. ${clientLine}
+STEP 2 — Write 1 post that follows that same format in ${who}'s voice, at the ${f.lane} funnel stage. ${clientLine}
 
-Keep the reference's structure; swap in real specifics from my source material below. De-slop each draft (strip AI tells) and run the QA gate before showing me.
+Keep the reference's structure; swap in real specifics from my source material below. De-slop the draft (strip AI tells) and run the QA gate before showing me.
 
 MY SOURCE MATERIAL:
 ${srcv}`;
@@ -870,7 +872,7 @@ ${f.example_text||""}
 MY SOURCE MATERIAL:
 ${srcv}
 
-TASK: Write 2–3 candidate posts that follow this format's skeleton, hook pattern, and rhythm, in ${who}'s voice. ${clientLine} De-slop each draft (strip AI tells) and run the QA gate before showing me.`;
+TASK: Write 1 post that follows this format's skeleton, hook pattern, and rhythm, in ${who}'s voice. ${clientLine} De-slop the draft (strip AI tells) and run the QA gate before showing me.`;
 }
 
 // ---------- utils ----------
