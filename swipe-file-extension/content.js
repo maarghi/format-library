@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  console.log('%c[MyFormats] content script v1.6.5 loaded', 'color:#0a66c2;font-weight:bold');
+  console.log('%c[MyFormats] content script v1.6.8 loaded', 'color:#0a66c2;font-weight:bold');
 
   // When the extension is reloaded, Chrome cannot kill the content script already
   // running in an open tab. It keeps going with a dead extension context, so its
@@ -111,10 +111,23 @@
     var out = lines.slice(i).join('\n').replace(/^\s+|\s+$/g, '');
     return out || t;
   }
+  // The author's name + headline ("CEO at C-Serv | Helping…") live in the actor block; it
+  // must never win as the post text. The real post body is the commentary container.
+  var ACTOR_SEL = '.update-components-actor, .feed-shared-actor';
+  var BODY_SEL = '.update-components-text, .feed-shared-inline-show-more-text, .update-components-update-v2__commentary, .feed-shared-update-v2__description, .feed-shared-text';
+  function inActor(e) { try { return !!(e.closest && e.closest(ACTOR_SEL)); } catch (x) { return false; } }
   function longestText(w) {
-    // Strip social-proof from EACH candidate first, so "Jane and 500 others reacted"
-    // collapses to "" and can never win as the longest text (the real body wins instead).
+    // 1) Prefer LinkedIn's real post-commentary container (the hook + body), never the actor.
+    var body = [].slice.call(w.querySelectorAll(BODY_SEL))
+      .filter(function (e) { return !inActor(e); })
+      .map(function (e) { return stripSocial((e.innerText || e.textContent || '').trim()); })
+      .filter(function (t) { return t.length > 20; });
+    body.sort(function (a, b) { return b.length - a.length; });
+    if (body[0]) return body[0];
+    // 2) Fallback: longest span/p, but skip anything inside the author/header block, and
+    //    strip social-proof so "Jane and 500 others reacted" can never win.
     var texts = [].slice.call(w.querySelectorAll('span[dir="ltr"], p'))
+      .filter(function (e) { return !inActor(e); })
       .map(function (e) { return stripSocial((e.innerText || '').trim()); })
       .filter(function (t) { return t.length > 40; });
     texts.sort(function (a, b) { return b.length - a.length; });
@@ -127,7 +140,14 @@
   function findImage(w) {
     var best = '', bestScore = 0;
     [].slice.call(w.querySelectorAll('img')).forEach(function (im) {
+      // Resolve the real URL even before the image has decoded. currentSrc/src first; if
+      // those are still a lazy placeholder, pull the licdn URL out of srcset (LinkedIn sets
+      // srcset immediately even though naturalWidth stays 0 until the image actually loads).
       var src = im.currentSrc || im.src || '';
+      if (!/licdn\.com|media\./i.test(src)) {
+        var mm = (im.getAttribute('srcset') || '').match(/https?:\/\/[^\s"']*(?:licdn\.com|media\.)[^\s"']*/i);
+        if (mm) src = mm[0];
+      }
       if (!/licdn\.com|media\./i.test(src)) return;
       if (/profile-displayphoto|profile-framedphoto|company-logo|EntityPhoto|\/aero-v1\/|ghost|static\.licdn/i.test(src)) return;
       var r = im.getBoundingClientRect();
@@ -135,6 +155,7 @@
       var isFeed = /feedshare|dms\/image|image\/v2|image\/upload|article-cover/i.test(src);
       if ((r.width < 120 || r.height < 120) && !isFeed) return;   // skip small chrome/avatars
       var score = area * (isFeed ? 3 : 1);
+      if (!score && isFeed) score = 1;   // feedshare image is present but hasn't decoded yet — capture it anyway
       if (score > bestScore) { bestScore = score; best = src; }
     });
     return best;
@@ -161,15 +182,31 @@
 
   // Capture the post so the library can render it exactly like the LinkedIn feed:
   // link, full text, main image, and social counts. Read at ➕-click while the node is fresh.
+  // findWrapper returns the smallest boxed+URN ancestor — great for placing the button and
+  // resolving the link, but on many layouts the URN sits on a header-level box that does NOT
+  // contain the post body or image (they're siblings lower in the post). postRoot climbs to
+  // the WIDEST single-post box (stops before it would span a second post) so body/image/counts
+  // are in scope. That's why some saves came in with author+link but empty text+image.
+  function postRoot(cm) {
+    var node = cm, best = null;
+    for (var i = 0; i < 24 && node && node.parentElement; i++) {
+      node = node.parentElement;
+      if (node.querySelectorAll(CM_SEL).length > 1) break;   // climbed into a second post — too far
+      var r = node.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) best = node;           // keep the widest single-post box
+    }
+    return best || cm;
+  }
   function extract(cm) {
     var w = findWrapper(cm);
-    var urn = scanUrn(w);
+    var root = postRoot(cm);
+    var urn = scanUrn(w) || scanUrn(root);
     return {
       link: urn ? 'https://www.linkedin.com/feed/update/' + urn + '/' : '',
-      text: longestText(w),
-      image: findImage(w),
-      reactions: matchCount(w, 'reactions?'),
-      comments: matchCount(w, 'comments?')
+      text: longestText(root) || longestText(w),
+      image: findImage(root) || findImage(w),
+      reactions: matchCount(root, 'reactions?') || matchCount(w, 'reactions?'),
+      comments: matchCount(root, 'comments?') || matchCount(w, 'comments?')
     };
   }
 
