@@ -7,29 +7,37 @@
 (function () {
   'use strict';
 
-  console.log('%c[MyFormats] content script v1.6.8 loaded', 'color:#0a66c2;font-weight:bold');
+  // Re-injection happens on in-app navigation AND on extension reload. The OLD design gave
+  // every injection a new generation number and made older instances "stand down" (kill
+  // their observer + heartbeat). Under LinkedIn's rapid multi-step SPA navigations those
+  // instances raced and superseded each other until NONE were left alive — so nothing
+  // re-injected the buttons and only a hard refresh brought them back.
+  //
+  // New rule: a re-injection LEAVES A HEALTHY INSTANCE ALONE. The first instance stays alive
+  // for the whole SPA session; its MutationObserver re-injects buttons whenever LinkedIn
+  // renders new posts (route changes included). Only a genuinely dead instance — one whose
+  // extension context was invalidated by a reload — is torn down and replaced.
+  try {
+    if (window.__SF_ACTIVE && window.__SF_ACTIVE.alive && window.__SF_ACTIVE.alive()) return;
+  } catch (e) {}
+  try { if (window.__SF_ACTIVE && window.__SF_ACTIVE.standDown) window.__SF_ACTIVE.standDown(); } catch (e) {}
 
-  // When the extension is reloaded, Chrome cannot kill the content script already
-  // running in an open tab. It keeps going with a dead extension context, so its
-  // buttons hang forever on save. The service worker now re-injects a fresh copy into
-  // every open LinkedIn tab, which means two instances briefly share this isolated
-  // world. Both see window.__SF_GEN, so the older one can notice it has been superseded
-  // and stand down. No refresh needed.
-  var SF_GEN = (window.__SF_GEN = (window.__SF_GEN || 0) + 1);
+  console.log('%c[MyFormats] content script v1.6.11 loaded', 'color:#0a66c2;font-weight:bold');
+
   var timers = [];
+  var mo = null;
   function alive() {
-    if (window.__SF_GEN !== SF_GEN) return false;          // a newer instance took over
-    try { return !!(chrome.runtime && chrome.runtime.id); } // extension still reachable
+    try { return window.__SF_ACTIVE === self && !!(chrome.runtime && chrome.runtime.id); }
     catch (e) { return false; }
   }
   function standDown() {
     timers.forEach(clearInterval); timers = [];
     try { if (mo) mo.disconnect(); } catch (e) {}
   }
-  // A fresh instance owns the page: clear the previous generation's buttons.
-  if (SF_GEN > 1) {
-    [].slice.call(document.querySelectorAll('.sf-btn')).forEach(function (b) { b.remove(); });
-  }
+  var self = { alive: alive, standDown: standDown };
+  window.__SF_ACTIVE = self;                              // claim ownership of the page
+  // Clear any leftover buttons from a previous (now-replaced) instance.
+  [].slice.call(document.querySelectorAll('.sf-btn')).forEach(function (b) { b.remove(); });
 
   // Widened from 'Open control menu for post' — some surfaces label it differently and
   // a post with no matching menu simply never gets a button.

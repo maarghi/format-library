@@ -101,3 +101,39 @@ chrome.runtime.onInstalled.addListener(function () {
     });
   } catch (e) {}
 });
+
+// LinkedIn is a single-page app: navigating into a profile or its posts happens via
+// history navigation, not a page load, so the manifest's content_scripts never re-run.
+// If the live instance has stood down (dead context after an extension reload, or
+// superseded) it never revives itself, and the button stays missing until a manual
+// refresh. tabs.onUpdated fires with changeInfo.url on these in-app navigations too, so
+// we re-inject a fresh content script on every LinkedIn URL change. The content script's
+// generation counter (window.__SF_GEN) makes the newest instance win and the rest stand
+// down, so this can't produce duplicate buttons. CSS from the initial load persists.
+// Re-inject ONLY when the path genuinely changes. LinkedIn fires tabs.onUpdated many
+// times per navigation (tracking params, internal redirects); re-injecting on each one
+// spawned a fresh instance every time, and each new instance superseded the last, wiped
+// the buttons, and re-injected — a wipe/re-inject thrash that left the buttons blinking
+// out. Keyed on pathname + a cooldown, a route change re-injects once; the live instance
+// then self-heals any later same-path churn on its own.
+var sfReinject = {};
+var sfLastPath = {};
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo) {
+  if (!changeInfo || !changeInfo.url) return;
+  var m = /^https:\/\/www\.linkedin\.com(\/[^?#]*)/.exec(changeInfo.url);
+  if (!m) return;
+  var path = m[1];
+  var prev = sfLastPath[tabId];
+  if (prev && prev.path === path && (Date.now() - prev.time) < 4000) return;   // same page, just handled
+  sfLastPath[tabId] = { path: path, time: Date.now() };
+  clearTimeout(sfReinject[tabId]);
+  sfReinject[tabId] = setTimeout(function () {
+    delete sfReinject[tabId];
+    try {
+      chrome.scripting.executeScript({ target: { tabId: tabId }, files: ['content.js'] }, function () { void chrome.runtime.lastError; });
+    } catch (e) {}
+  }, 500);
+});
+chrome.tabs.onRemoved.addListener(function (tabId) {
+  clearTimeout(sfReinject[tabId]); delete sfReinject[tabId]; delete sfLastPath[tabId];
+});
