@@ -134,22 +134,9 @@
   </div>
   <div class="rule"></div>
 
-  <!-- ============ SCREEN: router ============ -->
-  <section class="screen" id="router">
-    <p class="lead">How are you using the Format Library?</p>
-    <button class="choice" id="chooseVirio">
-      <span class="em">🐸</span>
-      <span><h3>I'm on the Virio team</h3><p>Save into the shared team library. You'll verify your Google account.</p></span>
-    </button>
-    <button class="choice" id="choosePersonal">
-      <span class="em">✨</span>
-      <span><h3>Set up my own library</h3><p>Create your own private library in your Google Drive — the extension builds it for you.</p></span>
-    </button>
-  </section>
-
-  <!-- ============ SCREEN: virio verify ============ -->
-  <section class="screen" id="virioVerify">
-    <p class="lead">Enter your Virio team code to unlock the shared library.</p>
+  <!-- ============ SCREEN: team-code gate ============ -->
+  <section class="screen" id="gate">
+    <p class="lead">Enter your Virio team code to unlock the Format Library.</p>
     <div class="gatebox">
       <div class="row">
         <input id="codeInput" type="text" placeholder="team code" autocomplete="off">
@@ -157,32 +144,7 @@
       </div>
       <p class="note" id="codeNote" style="display:none"></p>
     </div>
-    <button class="backlink" id="toPersonalFromVirio">Set up my own library instead →</button>
-    <button class="backlink" id="virioBack" style="display:block">← Back</button>
-  </section>
-
-  <!-- ============ SCREEN: personal guided setup ============ -->
-  <section class="screen" id="personalSetup">
-    <p class="lead">Two quick steps and your private library is live. It lives in <b>your</b> Google Drive — only you can see it.</p>
-
-    <div class="setupstep" id="ps1">
-      <div class="lbl"><b>Step 1</b><span class="done">✓ done</span></div>
-      <h4>Create your library</h4>
-      <p>Opens a copy of the library in your Google Drive with everything wired up. Then <b>Deploy → New deployment → Web app → Anyone</b>, and copy the <code>/exec</code> URL it gives you.</p>
-      <button class="btn dark wide" id="createLibBtn">Create my library →</button>
-      <p class="note" id="ps1Note" style="display:none"></p>
-    </div>
-
-    <div class="setupstep" id="ps2">
-      <div class="lbl"><b>Step 2</b><span class="done">✓ done</span></div>
-      <h4>Connect it</h4>
-      <p>Paste the <code>/exec</code> URL from your deployment here.</p>
-      <input id="epInput" type="text" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
-      <button class="btn dark wide" id="connectBtn" style="margin-top:7px">Connect</button>
-      <p class="note" id="ps2Note" style="display:none"></p>
-    </div>
-
-    <button class="backlink" id="personalBack">← Back</button>
+    <p class="note" style="margin-top:12px">Don't have a code? Ask Marghi on the Virio team.</p>
   </section>
 
   <!-- ============ SCREEN: home (name + labels + links) ============ -->

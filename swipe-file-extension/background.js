@@ -1,16 +1,13 @@
 // Background service worker: bridges the content script to the Apps Script web app.
-// The endpoint depends on the user's onboarding mode (chrome.storage.sync.mode):
-//   • 'virio'    → the shared Virio library (SF_CONFIG.SHARED_ENDPOINT), unlocked only
-//                  after the popup verifies the user's Google email against the allowlist.
-//   • 'personal' → the user's OWN deployment URL, saved during guided setup.
-//   • ''         → not set up yet; saves are refused with a "finish setup" message.
+// The shared Virio library (SF_CONFIG.SHARED_ENDPOINT) is used once the popup has
+// unlocked it with the team code (chrome.storage.sync.mode === 'virio'). Until then,
+// saves are refused with a "finish setup" message.
 importScripts('config.js');
 
 function cfg(cb) {
-  chrome.storage.sync.get(['mode', 'endpoint', 'tabName'], function (c) {
-    var mode = c.mode || '';
-    var endpoint = (mode === 'virio') ? self.SF_CONFIG.SHARED_ENDPOINT : (c.endpoint || '');
-    cb(endpoint, (c.tabName || ''), mode);
+  chrome.storage.sync.get(['mode', 'tabName'], function (c) {
+    var endpoint = (c.mode === 'virio') ? self.SF_CONFIG.SHARED_ENDPOINT : '';
+    cb(endpoint, (c.tabName || ''), c.mode || '');
   });
 }
 
@@ -38,20 +35,6 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
       msg.payload.tab = tab;               // route to this person's own tab
       postJson(url, msg.payload, sendResponse);
     });
-    return true;
-  }
-
-  // Validate a pasted personal endpoint by asking it for the people list (proves it's a
-  // working deployment of this Apps Script before we save it as the user's library).
-  if (msg.type === 'SF_CHECK_ENDPOINT') {
-    var u = String(msg.url || '').trim();
-    if (!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec/.test(u)) {
-      sendResponse({ ok: false, error: 'That does not look like an Apps Script /exec URL.' }); return true;
-    }
-    fetch(u + (u.indexOf('?') > -1 ? '&' : '?') + 'action=people', { method: 'GET' })
-      .then(function (r) { return r.json(); })
-      .then(function (d) { sendResponse({ ok: !!(d && d.ok !== false), raw: d }); })
-      .catch(function (e) { sendResponse({ ok: false, error: 'Could not reach it: ' + e }); });
     return true;
   }
 

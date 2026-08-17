@@ -15,14 +15,7 @@ self.SF_CONFIG = {
   SHARED_SHEET_ID: '1ZbIEn59ddSFJNJ5SXVwC_OU7o4FSybXmi8-lFBhYAmg',
 
   // ---------- Virio team code ----------
-  // Teammates type this once to unlock the shared library. Give it to the team; rotate it
+  // Teammates type this once to unlock the library. Give it to the team; rotate it
   // whenever you like (everyone just re-enters the new code).  TODO: set your own code.
-  VIRIO_CODE: 'virio-frogs',
-
-  // ---------- Personal (net-new) setup ----------
-  // One-time: make a TEMPLATE Google Sheet, bind this Apps Script to it (Extensions →
-  // Apps Script → paste Code.standalone.gs), set sharing to "Anyone with the link → Viewer",
-  // then paste its COPY link here. The copy link is the sheet URL with /edit replaced by /copy:
-  //   https://docs.google.com/spreadsheets/d/<TEMPLATE_ID>/copy
-  TEMPLATE_COPY_URL: '' // TODO: paste your template's /copy link
+  VIRIO_CODE: 'virio-frogs'
 };

@@ -1,7 +1,6 @@
-// Popup: onboarding router + home. Two modes (chrome.storage.sync.mode):
-//   'virio'    → shared team library (endpoint resolved in background from SF_CONFIG).
-//   'personal' → the user's own deployment (endpoint saved during guided setup).
-// Everything talks to the resolved endpoint through the background worker.
+// Popup: team-code gate + home. Once unlocked (chrome.storage.sync.mode === 'virio'),
+// saves go to the shared Virio library (endpoint resolved in the background from
+// SF_CONFIG). Everything talks to that endpoint through the background worker.
 
 var ADD_NEW = '__add_new__';
 
@@ -23,23 +22,16 @@ function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function
 var state = { mode: '', endpoint: '', tabName: '', tabGid: '', people: [], labels: [] };
 
 function showScreen(id) {
-  ['router', 'virioVerify', 'personalSetup', 'home'].forEach(function (s) {
+  ['gate', 'home'].forEach(function (s) {
     $(s).classList.toggle('active', s === id);
   });
 }
 
-// ================= router =================
-$('chooseVirio').addEventListener('click', function () { showScreen('virioVerify'); });
-$('choosePersonal').addEventListener('click', function () { showScreen('personalSetup'); });
-$('virioBack').addEventListener('click', function () { showScreen('router'); });
-$('personalBack').addEventListener('click', function () { showScreen('router'); });
-$('toPersonalFromVirio').addEventListener('click', function () { showScreen('personalSetup'); });
-
-// ================= virio verify (team code) =================
+// ================= team-code gate =================
 async function unlockVirio() {
   await setSync({ mode: 'virio' });
   state.mode = 'virio';
-  toast('Unlocked ✓ Welcome to the team library');
+  toast('Unlocked ✓ Welcome to the library');
   loadHome();
 }
 
@@ -53,57 +45,17 @@ $('codeBtn').addEventListener('click', function () {
 });
 $('codeInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('codeBtn').click(); });
 
-// ================= personal guided setup =================
-$('createLibBtn').addEventListener('click', function () {
-  var url = (self.SF_CONFIG && self.SF_CONFIG.TEMPLATE_COPY_URL) || '';
-  var note = $('ps1Note'); note.style.display = 'block';
-  if (!url) {
-    note.className = 'note warn';
-    note.textContent = 'The library template isn’t configured yet (TEMPLATE_COPY_URL is empty in config.js).';
-    return;
-  }
-  chrome.tabs.create({ url: url });
-  note.className = 'note';
-  note.textContent = 'Opened the copy in a new tab. Make the copy, then Deploy → New deployment → Web app → Anyone, and paste the URL below.';
-  $('ps1').classList.add('ok');
-});
-
-$('connectBtn').addEventListener('click', async function () {
-  var u = $('epInput').value.trim();
-  var note = $('ps2Note'); note.style.display = 'block'; note.className = 'note';
-  if (!u) { note.className = 'note warn'; note.textContent = 'Paste your /exec URL first.'; return; }
-  $('connectBtn').disabled = true; $('connectBtn').textContent = 'Connecting…';
-  var r = await msg({ type: 'SF_CHECK_ENDPOINT', url: u });
-  $('connectBtn').disabled = false; $('connectBtn').textContent = 'Connect';
-  if (!r || !r.ok) {
-    note.className = 'note warn';
-    note.textContent = (r && r.error) || 'Couldn’t reach that URL. Check it’s deployed as a Web app with access "Anyone".';
-    return;
-  }
-  await setSync({ mode: 'personal', endpoint: u });
-  state.mode = 'personal'; state.endpoint = u;
-  $('ps2').classList.add('ok');
-  toast('Connected ✓ Your library is live');
-  loadHome();
-});
-$('epInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('connectBtn').click(); });
-
 // ================= home: links =================
-function sheetIdForMode() {
-  return state.mode === 'virio' ? ((self.SF_CONFIG && self.SF_CONFIG.SHARED_SHEET_ID) || '') : '';
-}
 function refreshLinks() {
   var viewer = $('viewerLink');
   viewer.href = state.endpoint || '#';
   var sheet = $('sheetLink');
-  var sid = sheetIdForMode();
+  var sid = (self.SF_CONFIG && self.SF_CONFIG.SHARED_SHEET_ID) || '';
   if (state.tabName && sid) {
     sheet.href = 'https://docs.google.com/spreadsheets/d/' + sid + '/edit' + (state.tabGid ? '#gid=' + state.tabGid : '');
     sheet.setAttribute('aria-disabled', 'false');
     sheet.querySelector('span:nth-child(2)').textContent = 'Open my sheet tab (' + state.tabName + ')';
     sheet.style.display = '';
-  } else if (state.mode === 'personal') {
-    sheet.style.display = 'none';   // we don't know the personal spreadsheet id from the /exec URL
   } else {
     sheet.setAttribute('aria-disabled', 'true');
   }
@@ -115,21 +67,18 @@ function refreshOnboarded() {
   if (on) $('bannerName').textContent = state.tabName;
   $('step1').classList.toggle('complete', on);
   $('step2').classList.toggle('complete', (state.labels || []).length > 0);
-  // mode line + start-over
+  // mode line + sign-out
   var ml = $('modeline');
-  ml.innerHTML = (state.mode === 'virio' ? 'Virio team library' : 'Your personal library')
-    + ' · <button id="startOver">switch</button>';
+  ml.innerHTML = 'Virio team library · <button id="startOver">sign out</button>';
   $('startOver').addEventListener('click', startOver);
-  $('step1desc').textContent = state.mode === 'virio'
-    ? 'Your saves land in a tab with your name in the shared team sheet. Pick yourself, or add your name.'
-    : 'Your saves land in a tab with your name in your own sheet. Add your name.';
+  $('step1desc').textContent = 'Your saves land in a tab with your name in the shared team sheet. Pick yourself, or add your name.';
   refreshLinks();
 }
 
 async function startOver() {
   await setSync({ mode: '', endpoint: '', tabName: '', tabGid: '' });
   state = { mode: '', endpoint: '', tabName: '', tabGid: '', people: [], labels: [] };
-  showScreen('router');
+  showScreen('gate');
 }
 
 // ================= home: person dropdown =================
@@ -250,7 +199,6 @@ async function loadHome() {
   state.endpoint = st.endpoint || '';
   state.tabName = st.tabName || '';
   state.tabGid = st.tabGid || '';
-  var ready = state.mode === 'virio' || (state.mode === 'personal' && state.endpoint);
-  if (ready) loadHome();
-  else showScreen('router');
+  if (state.mode === 'virio') loadHome();
+  else showScreen('gate');
 })();
