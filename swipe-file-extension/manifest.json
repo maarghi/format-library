@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Save to My Formats",
-  "version": "1.6.11",
-  "description": "One-click save LinkedIn posts — the full post, image, funnel stage, labels, and a note — to your team's live Format Library.",
+  "version": "1.7.2",
+  "description": "One-click save LinkedIn posts — the full post, image, funnel stage, labels, and a note — to your live Format Library.",
   "permissions": [
     "storage",
     "scripting",
@@ -30,7 +30,6 @@
       "run_at": "document_idle"
     }
   ],
-  "options_page": "options.html",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",

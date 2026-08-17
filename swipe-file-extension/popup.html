@@ -5,12 +5,13 @@
   :root{
     --paper:#FFF9ED;--paper-2:#F4EDD9;--card:#FFFDF8;--card-2:#F8F1DF;
     --ink:#1B1B18;--ink-2:#565349;--ink-3:#8A8A86;--line:#E7DEC8;--line-2:#D8CDB2;
-    --gold:#D5B473;--frog:#5F964E;--ok:#127c3a;
+    --gold:#D5B473;--frog:#5F964E;--ok:#127c3a;--warn:#b8412d;
     --sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
     --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box}
-  body{width:372px;margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+  html{width:372px;overflow-x:hidden}
+  body{width:372px;max-width:372px;margin:0;overflow-x:hidden;background:var(--paper);color:var(--ink);font-family:var(--sans);
     line-height:1.5;-webkit-font-smoothing:antialiased}
   .wrap{padding:16px 16px 18px}
 
@@ -21,6 +22,39 @@
   .mast .sub{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-top:1px}
   .rule{height:3px;width:38px;background:var(--gold);margin:8px 0 2px;border-radius:2px}
 
+  .screen{display:none}
+  .screen.active{display:block}
+
+  /* router choices */
+  .lead{font-size:12.5px;color:var(--ink-2);margin:14px 0 12px;line-height:1.5}
+  .choice{display:flex;align-items:flex-start;gap:11px;width:100%;text-align:left;cursor:pointer;
+    background:var(--card);border:1px solid var(--line-2);border-radius:12px;padding:13px 13px;margin-bottom:10px;
+    font-family:inherit;transition:border-color .1s,transform .06s}
+  .choice:hover{border-color:var(--frog)}
+  .choice:active{transform:translateY(1px)}
+  .choice .em{font-size:20px;line-height:1.1;flex:none}
+  .choice h3{margin:0 0 2px;font-size:13.5px;font-weight:800}
+  .choice p{margin:0;font-size:11.5px;color:var(--ink-2);line-height:1.45}
+  .backlink{background:none;border:0;color:var(--ink-3);font-family:inherit;font-size:11.5px;cursor:pointer;
+    text-decoration:underline;padding:2px 0;margin-top:2px}
+
+  /* verify / gate */
+  .gatebox{background:var(--card-2);border:1px solid var(--line-2);border-radius:11px;padding:12px;margin:12px 0}
+  .gatebox .who{font-weight:700}
+  .note{font-size:11.5px;color:var(--ink-2);line-height:1.45;margin:8px 0 0}
+  .note.warn{color:var(--warn)}
+  .note.ok{color:var(--ok)}
+
+  /* guided setup steps */
+  .setupstep{border:1px solid var(--line);border-radius:11px;padding:11px 12px;margin-bottom:9px;background:var(--card)}
+  .setupstep .lbl{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+  .setupstep .lbl b{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+  .setupstep h4{margin:0;font-size:13px;font-weight:700}
+  .setupstep p{margin:2px 0 8px;font-size:11.5px;color:var(--ink-2);line-height:1.45}
+  .setupstep .done{color:var(--ok);font-weight:800;font-size:12px;display:none}
+  .setupstep.ok .done{display:inline}
+  .setupstep code{font-family:var(--mono);font-size:10.5px;background:var(--card-2);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+
   /* saving-as banner */
   .banner{display:none;align-items:center;gap:8px;background:var(--card-2);border:1px solid var(--line-2);
     border-radius:10px;padding:9px 11px;margin:12px 0 2px;font-size:12.5px}
@@ -28,6 +62,8 @@
   .banner .who{font-weight:700}
   .banner .chg{margin-left:auto;font-size:11px;color:var(--ink-3);text-decoration:underline;cursor:pointer;background:none;border:0;font-family:inherit}
   .banner .tick{color:var(--ok);font-weight:800}
+  .modeline{font-size:11px;color:var(--ink-3);margin:2px 0 0}
+  .modeline button{background:none;border:0;color:var(--ink-3);text-decoration:underline;cursor:pointer;font-family:inherit;font-size:11px;padding:0}
 
   .step{margin-top:16px}
   .step .n{display:flex;align-items:center;gap:8px;margin-bottom:8px}
@@ -46,8 +82,10 @@
   .btn{border:0;border-radius:9px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;padding:9px 13px}
   .btn.dark{background:var(--ink);color:var(--paper)}
   .btn.dark:hover{opacity:.92}
+  .btn.dark:disabled{opacity:.45;cursor:default}
   .btn.ghost{background:var(--card);border:1px solid var(--line-2);color:var(--ink);font-weight:600}
   .btn.ghost:hover{background:var(--card-2)}
+  .btn.wide{width:100%}
   .hide{display:none}
 
   /* labels */
@@ -81,9 +119,6 @@
   .tip{margin-top:16px;padding-top:12px;border-top:1px dashed var(--line);font-size:11.5px;color:var(--ink-2);line-height:1.5}
   .tip b{color:var(--ink)}
   .tip .plus{display:inline-block;background:var(--ink);color:var(--paper);border-radius:5px;padding:1px 6px;font-size:10.5px;font-weight:700}
-  .advanced{margin-top:12px}
-  .advanced summary{font-size:11px;color:var(--ink-3);cursor:pointer}
-  .advanced input{font-size:11px;padding:7px 9px;margin-top:7px}
   .toast{position:fixed;left:50%;bottom:12px;transform:translateX(-50%) translateY(8px);background:var(--ink);color:var(--paper);
     font-size:12px;font-weight:600;padding:8px 14px;border-radius:9px;opacity:0;transition:opacity .18s,transform .18s;pointer-events:none}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -99,63 +134,113 @@
   </div>
   <div class="rule"></div>
 
-  <div class="banner" id="banner">
-    <span class="tick">✓</span><span>Saving as <span class="who" id="bannerName"></span></span>
-    <button class="chg" id="changeName">change</button>
-  </div>
-
-  <!-- Step 1 -->
-  <section class="step" id="step1">
-    <div class="n"><b>Step 1</b><span class="done">✓ done</span></div>
-    <h2>Who are you?</h2>
-    <p class="desc">Your saves land in a tab with your name in the shared sheet. Pick yourself, or add your name.</p>
-    <select id="person"><option value="">Loading…</option></select>
-    <div class="row hide" id="newNameRow" style="margin-top:8px">
-      <input id="newName" type="text" placeholder="Your first name (e.g. Millie)" autocomplete="off">
-      <button class="btn dark" id="newNameAdd">Add</button>
-    </div>
+  <!-- ============ SCREEN: router ============ -->
+  <section class="screen" id="router">
+    <p class="lead">How are you using the Format Library?</p>
+    <button class="choice" id="chooseVirio">
+      <span class="em">🐸</span>
+      <span><h3>I'm on the Virio team</h3><p>Save into the shared team library. You'll verify your Google account.</p></span>
+    </button>
+    <button class="choice" id="choosePersonal">
+      <span class="em">✨</span>
+      <span><h3>Set up my own library</h3><p>Create your own private library in your Google Drive — the extension builds it for you.</p></span>
+    </button>
   </section>
 
-  <!-- Step 2 -->
-  <section class="step" id="step2">
-    <div class="n"><b>Step 2</b><span class="done">✓ done</span></div>
-    <h2>Your labels</h2>
-    <p class="desc">Labels let you filter the library — clients you write for, or the vibe of a post. Tap a suggestion or add your own.</p>
-    <div class="chips" id="curLabels"></div>
-    <div class="muted" id="suggestHint" style="margin-bottom:6px">Suggestions — tap to add:</div>
-    <div class="chips" id="suggestLabels"></div>
-    <div class="newlabel">
-      <input id="labelInput" type="text" placeholder="+ your own label" autocomplete="off">
-      <select id="labelCat"><option value="Client">Client</option><option value="Tag">Tag</option></select>
-      <button class="btn ghost" id="labelAdd">Add</button>
+  <!-- ============ SCREEN: virio verify ============ -->
+  <section class="screen" id="virioVerify">
+    <p class="lead">Enter your Virio team code to unlock the shared library.</p>
+    <div class="gatebox">
+      <div class="row">
+        <input id="codeInput" type="text" placeholder="team code" autocomplete="off">
+        <button class="btn dark" id="codeBtn">Unlock</button>
+      </div>
+      <p class="note" id="codeNote" style="display:none"></p>
     </div>
+    <button class="backlink" id="toPersonalFromVirio">Set up my own library instead →</button>
+    <button class="backlink" id="virioBack" style="display:block">← Back</button>
   </section>
 
-  <!-- Step 3 -->
-  <section class="step" id="step3">
-    <div class="n"><b>Step 3</b></div>
-    <h2>Open your library</h2>
-    <div class="links">
-      <a class="link primary" id="viewerLink" target="_blank" rel="noopener">
-        <img class="ic" src="icons/icon48.png" alt=""><span>Open the Format Library</span><span class="arrow">↗</span>
-      </a>
-      <a class="link second" id="sheetLink" target="_blank" rel="noopener" aria-disabled="true">
-        <span class="ic">📄</span><span>Open my sheet tab</span><span class="arrow">↗</span>
-      </a>
+  <!-- ============ SCREEN: personal guided setup ============ -->
+  <section class="screen" id="personalSetup">
+    <p class="lead">Two quick steps and your private library is live. It lives in <b>your</b> Google Drive — only you can see it.</p>
+
+    <div class="setupstep" id="ps1">
+      <div class="lbl"><b>Step 1</b><span class="done">✓ done</span></div>
+      <h4>Create your library</h4>
+      <p>Opens a copy of the library in your Google Drive with everything wired up. Then <b>Deploy → New deployment → Web app → Anyone</b>, and copy the <code>/exec</code> URL it gives you.</p>
+      <button class="btn dark wide" id="createLibBtn">Create my library →</button>
+      <p class="note" id="ps1Note" style="display:none"></p>
     </div>
+
+    <div class="setupstep" id="ps2">
+      <div class="lbl"><b>Step 2</b><span class="done">✓ done</span></div>
+      <h4>Connect it</h4>
+      <p>Paste the <code>/exec</code> URL from your deployment here.</p>
+      <input id="epInput" type="text" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
+      <button class="btn dark wide" id="connectBtn" style="margin-top:7px">Connect</button>
+      <p class="note" id="ps2Note" style="display:none"></p>
+    </div>
+
+    <button class="backlink" id="personalBack">← Back</button>
   </section>
 
-  <div class="tip">
-    <b>How to save:</b> on any LinkedIn post, click the
-    <span class="plus">➕ My Formats</span> button, pick a funnel stage &amp; labels, and hit save.
-  </div>
+  <!-- ============ SCREEN: home (name + labels + links) ============ -->
+  <section class="screen" id="home">
+    <div class="banner" id="banner">
+      <span class="tick">✓</span><span>Saving as <span class="who" id="bannerName"></span></span>
+      <button class="chg" id="changeName">change</button>
+    </div>
+    <div class="modeline" id="modeline"></div>
 
-  <details class="advanced">
-    <summary>Advanced — custom sheet endpoint</summary>
-    <input id="endpoint" type="text" placeholder="Leave blank to use the shared library">
-    <button class="btn ghost" id="endpointSave" style="margin-top:7px">Save endpoint</button>
-  </details>
+    <!-- Step 1 -->
+    <section class="step" id="step1">
+      <div class="n"><b>Step 1</b><span class="done">✓ done</span></div>
+      <h2>Who are you?</h2>
+      <p class="desc" id="step1desc">Your saves land in a tab with your name in the shared sheet. Pick yourself, or add your name.</p>
+      <select id="person"><option value="">Loading…</option></select>
+      <div class="row hide" id="newNameRow" style="margin-top:8px">
+        <input id="newName" type="text" placeholder="Your first name (e.g. Millie)" autocomplete="off">
+        <button class="btn dark" id="newNameAdd">Add</button>
+      </div>
+    </section>
+
+    <!-- Step 2 -->
+    <section class="step" id="step2">
+      <div class="n"><b>Step 2</b><span class="done">✓ done</span></div>
+      <h2>Your labels</h2>
+      <p class="desc">Labels let you filter the library — clients you write for, or the vibe of a post. Tap a suggestion or add your own.</p>
+      <div class="chips" id="curLabels"></div>
+      <div class="muted" id="suggestHint" style="margin-bottom:6px">Suggestions — tap to add:</div>
+      <div class="chips" id="suggestLabels"></div>
+      <div class="newlabel">
+        <input id="labelInput" type="text" placeholder="+ your own label" autocomplete="off">
+        <select id="labelCat"><option value="Client">Client</option><option value="Tag">Tag</option></select>
+        <button class="btn ghost" id="labelAdd">Add</button>
+      </div>
+    </section>
+
+    <!-- Step 3 -->
+    <section class="step" id="step3">
+      <div class="n"><b>Step 3</b></div>
+      <h2>Open your library</h2>
+      <div class="links">
+        <a class="link primary" id="viewerLink" target="_blank" rel="noopener">
+          <img class="ic" src="icons/icon48.png" alt=""><span>Open the Format Library</span><span class="arrow">↗</span>
+        </a>
+        <a class="link second" id="sheetLink" target="_blank" rel="noopener" aria-disabled="true">
+          <span class="ic">📄</span><span>Open my sheet tab</span><span class="arrow">↗</span>
+        </a>
+      </div>
+    </section>
+
+    <div class="tip">
+      <b>How to save:</b> on any LinkedIn post, click the
+      <span class="plus">➕ My Formats</span> button, pick a funnel stage &amp; labels, and hit save.
+    </div>
+  </section>
 </div>
 
 <div class="toast" id="toast"></div>
+<script src="config.js"></script>
 <script src="popup.js"></script>
