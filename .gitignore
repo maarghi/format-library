@@ -3,3 +3,4 @@
 *-backup-*.csv
 node_modules/
 .claude/
+/dist/
