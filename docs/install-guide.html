@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Save to My Formats — Install Guide</title>
+<style>
+  :root{--ink:#1b1b18;--ink2:#565349;--muted:#8a8a86;--gold:#D5B473;--frog:#5F964E;--line:#E7DEC8;--card:#FFFDF8;--paper:#FFF9ED}
+  *{box-sizing:border-box}
+  body{max-width:760px;margin:0 auto;padding:44px 22px 80px;font:16px/1.65 -apple-system,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:var(--paper)}
+  h1{font-size:27px;margin:0 0 2px}
+  .sub{color:var(--muted);font-size:14px;letter-spacing:.02em;margin:0 0 8px}
+  .rule{height:3px;width:44px;background:var(--gold);border-radius:2px;margin:10px 0 26px}
+  h2{font-size:19px;margin:34px 0 6px}
+  .tag{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:3px 9px;border-radius:999px;vertical-align:middle;margin-left:8px}
+  .tag.rec{background:#e7f3ea;color:var(--frog)}
+  .tag.now{background:#f4edd9;color:#9a7b2e}
+  ol{padding-left:22px} li{margin:7px 0}
+  a{color:#0a66c2;word-break:break-word}
+  code,.mono{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:14px;background:#f4edd9;padding:1px 6px;border-radius:5px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0}
+  .btn{display:inline-block;background:var(--ink);color:var(--paper);text-decoration:none;font-weight:700;font-size:14px;padding:9px 15px;border-radius:9px;margin:4px 0}
+  .note{font-size:14px;color:var(--ink2)}
+  .step-setup{background:#fff;border:2px solid var(--ink);border-radius:12px;padding:16px 18px;margin:16px 0}
+  kbd{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px}
+</style>
+</head>
+<body>
+  <h1>Save to My Formats</h1>
+  <p class="sub">Install guide for the Virio team</p>
+  <div class="rule"></div>
+  <p>This browser extension adds a <b>➕ My Formats</b> button to LinkedIn posts. Click it to save a
+  post — text, image, funnel stage, labels, a note — into the team's shared <b>Format Library</b>.
+  Pick whichever install method applies, then do the one-time setup at the bottom.</p>
+
+  <!-- ============ Option A ============ -->
+  <h2>Option A — Chrome Web Store <span class="tag rec">Easiest</span></h2>
+  <div class="card">
+    <p class="note"><b>Status: pending Google review.</b> Once it's approved, this is a one-click install.
+    Marghi will drop the link here:</p>
+    <p><a class="btn" href="#">Install from the Chrome Web Store →</a> &nbsp;<span class="note">(link coming after approval)</span></p>
+    <ol>
+      <li>Open the link above in <b>Google Chrome</b>.</li>
+      <li>Click <b>Add to Chrome</b> → <b>Add extension</b>.</li>
+      <li>Done — skip to <b>First-time setup</b> below.</li>
+    </ol>
+    <p class="note">It's an <i>unlisted</i> listing, so it won't show up in search — you can only install it from the link.</p>
+  </div>
+
+  <!-- ============ Option B ============ -->
+  <h2>Option B — Load it manually <span class="tag now">Works right now</span></h2>
+  <div class="card">
+    <p class="note">Use this until the store version is approved. Takes about 2 minutes.</p>
+    <ol>
+      <li><b>Download the files:</b> <a href="https://github.com/maarghi/format-library/archive/refs/heads/main.zip">click here to download the ZIP</a>
+        (from the <a href="https://github.com/maarghi/format-library">GitHub repo</a>).</li>
+      <li><b>Unzip it.</b> You'll get a folder named <code>format-library-main</code>. Inside it is a folder called <code>swipe-file-extension</code> — that's the one you need.</li>
+      <li>In Chrome, go to <code>chrome://extensions</code> (type it in the address bar).</li>
+      <li>Turn on <b>Developer mode</b> (toggle, top-right).</li>
+      <li>Click <b>Load unpacked</b> (top-left) and select the <code>swipe-file-extension</code> folder.</li>
+      <li>The extension appears in your toolbar. If you don't see the frog icon, click the puzzle-piece <span class="mono">🧩</span> and pin <b>Save to My Formats</b>.</li>
+    </ol>
+    <p class="note"><b>Keeping it updated:</b> when there's a new version, re-download the ZIP, replace the folder,
+    then hit the reload ↻ on the extension's card in <code>chrome://extensions</code>. (The store version, Option A, updates itself automatically.)</p>
+  </div>
+
+  <!-- ============ Setup ============ -->
+  <h2>First-time setup</h2>
+  <div class="step-setup">
+    <ol>
+      <li>Click the <b>Save to My Formats</b> icon in your Chrome toolbar.</li>
+      <li>Enter the team code: <code>virio-frogs</code> &nbsp;<span class="note">(ask Marghi if this changes)</span></li>
+      <li>Pick or type <b>your name</b> — your saves land in your own tab in the shared sheet.</li>
+      <li>Open <b>LinkedIn</b>. On any post, click the <b>➕ My Formats</b> button, choose a funnel stage &amp; labels, and hit <b>Save</b>.</li>
+    </ol>
+    <p class="note"><b>Tip:</b> if you just installed or reloaded the extension, refresh any LinkedIn tab you already had open
+    (<kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>) so the button appears.</p>
+  </div>
+
+  <p class="note" style="margin-top:30px">Questions or a broken link? Message Marghi.</p>
+</body>
+</html>
