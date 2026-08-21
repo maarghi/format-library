@@ -22,7 +22,7 @@
   } catch (e) {}
   try { if (window.__SF_ACTIVE && window.__SF_ACTIVE.standDown) window.__SF_ACTIVE.standDown(); } catch (e) {}
 
-  console.log('%c[MyFormats] content script v1.6.11 loaded', 'color:#0a66c2;font-weight:bold');
+  console.log('%c[MyFormats] content script v1.8.1 loaded', 'color:#0a66c2;font-weight:bold');
 
   var timers = [];
   var mo = null;
@@ -235,27 +235,38 @@
   function captureLinkViaMenu(cm, cb) {
     var done = false;
     function finish(link) { if (done) return; done = true; closeMenu(); cb(link || ''); }
-    function readToast() {
-      var a = document.querySelector(
+    // every post-link toast currently on screen
+    function toastLinks() {
+      return [].slice.call(document.querySelectorAll(
         '[role="alert"] a[href*="/posts/"], [role="status"] a[href*="/posts/"], [aria-live] a[href*="/posts/"]'
-      );
-      return a ? a.href.split('?')[0] : null;
+      )).map(function (a) { return a.href.split('?')[0]; });
+    }
+    function findCopyItem() {
+      var items = [].slice.call(document.querySelectorAll('[role="menuitem"]'));
+      for (var i = 0; i < items.length; i++) { if (/copy link/i.test(items[i].textContent || '')) return items[i]; }
+      return null;
     }
     try {
       cm.click();
-      setTimeout(function () {
-        var items = [].slice.call(document.querySelectorAll('[role="menuitem"]'));
-        var copy = null;
-        for (var i = 0; i < items.length; i++) { if (/copy link/i.test(items[i].textContent || '')) { copy = items[i]; break; } }
-        if (!copy) { finish(''); return; }
+      // Poll for the "Copy link to post" item — the menu can render slowly (portal).
+      var mtries = 0;
+      var mIv = setInterval(function () {
+        mtries++;
+        var copy = findCopyItem();
+        if (!copy) { if (mtries >= 12) { clearInterval(mIv); finish(''); } return; }  // ~1.8s → give up (no copy item)
+        clearInterval(mIv);
+        // Snapshot toasts ALREADY on screen so a stale one from a previous copy can't win.
+        var seen = {}; toastLinks().forEach(function (h) { seen[h] = 1; });
         copy.click();
         var tries = 0;
-        var iv = setInterval(function () {
+        var tIv = setInterval(function () {
           tries++;
-          var link = readToast();
-          if (link || tries >= 34) { clearInterval(iv); finish(link); }
+          var links = toastLinks(), fresh = null;
+          for (var i = 0; i < links.length; i++) { if (!seen[links[i]]) { fresh = links[i]; break; } }  // only a NEW toast
+          if (fresh) { clearInterval(tIv); finish(fresh); }
+          else if (tries >= 40) { clearInterval(tIv); finish(''); }                                     // ~6s → give up
         }, 150);
-      }, 600);
+      }, 150);
     } catch (e) { finish(''); }
   }
 
