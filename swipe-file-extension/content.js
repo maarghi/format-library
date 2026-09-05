@@ -7,6 +7,10 @@
 (function () {
   'use strict';
 
+  // Captured up front (before LinkedIn's router can strip the hash): the Format Library's
+  // "Fix" button opens a post at …#sf-fix so we auto-open the save form to re-capture it.
+  var SF_FIX_REQUESTED = /sf-fix/i.test(location.hash || '');
+
   // Re-injection happens on in-app navigation AND on extension reload. The OLD design gave
   // every injection a new generation number and made older instances "stand down" (kill
   // their observer + heartbeat). Under LinkedIn's rapid multi-step SPA navigations those
@@ -22,7 +26,7 @@
   } catch (e) {}
   try { if (window.__SF_ACTIVE && window.__SF_ACTIVE.standDown) window.__SF_ACTIVE.standDown(); } catch (e) {}
 
-  console.log('%c[MyFormats] content script v1.8.1 loaded', 'color:#0a66c2;font-weight:bold');
+  console.log('%c[MyFormats] content script v1.8.2 loaded', 'color:#0a66c2;font-weight:bold');
 
   var timers = [];
   var mo = null;
@@ -598,4 +602,21 @@
   timers.push(setInterval(function () { if (!document.hidden) inject(); }, 3000));   // heartbeat
 
   burst();
+
+  // Opened from the library's "Fix" button → auto-open the save form for this post so the
+  // user just reviews and hits Save. The save matches the post by its activity id and
+  // updates the existing (wrong/incomplete) row in place.
+  if (SF_FIX_REQUESTED) {
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}   // don't re-trigger on refresh
+    var fxTries = 0;
+    var fxIv = setInterval(function () {
+      if (!alive()) { clearInterval(fxIv); return; }
+      var cm = document.querySelector(CM_SEL);
+      if (cm) {
+        clearInterval(fxIv);
+        var author = (cm.getAttribute('aria-label') || '').replace(/^Open control menu for post by\s*/i, '').trim();
+        try { openForm(cm, author); } catch (e) {}
+      } else if (++fxTries >= 60) { clearInterval(fxIv); }   // ~15s, then give up (user can click + manually)
+    }, 250);
+  }
 })();
