@@ -1,8 +1,12 @@
-// Save to My Formats — content script (v1.3.0)
+// Save to My Formats — content script (v1.8.4)
 // Anchors on each post's control-menu button, injects a "➕ My Formats" button,
 // and on click opens a form: name + funnel + labels (toggle chips from the sheet's
 // `labels` tab) + a free note. Captures the post itself too — author, full text, main
 // image, and social counts — so the live library can render it exactly like the feed.
+//
+// v1.8.4 hardens FIRST-save capture. Half-entries (link+funnel+name, empty Text/Image/
+// Author) came from several independent bugs — not one. See extract / findPostCard /
+// waitAndRefine / captureLinkViaMenu.
 
 (function () {
   'use strict';
@@ -26,7 +30,7 @@
   } catch (e) {}
   try { if (window.__SF_ACTIVE && window.__SF_ACTIVE.standDown) window.__SF_ACTIVE.standDown(); } catch (e) {}
 
-  console.log('%c[MyFormats] content script v1.8.3 loaded', 'color:#0a66c2;font-weight:bold');
+  console.log('%c[MyFormats] content script v1.8.4 loaded', 'color:#0a66c2;font-weight:bold');
 
   var timers = [];
   var mo = null;
@@ -44,7 +48,8 @@
   [].slice.call(document.querySelectorAll('.sf-btn')).forEach(function (b) { b.remove(); });
 
   // Widened from 'Open control menu for post' — some surfaces label it differently and
-  // a post with no matching menu simply never gets a button.
+  // a post with no matching menu simply never gets a button. Comment menus also match
+  // this prefix; isPostMenu() filters those so we don't treat a comment as the post.
   var CM_SEL = 'button[aria-label^="Open control menu"]';
   var labelCache = null;
 
@@ -76,6 +81,7 @@
   // Check the wrapper itself before its children. On a reshare the outer post and the
   // quoted post both carry URNs, and the outer one is the post being saved.
   function scanUrn(w) {
+    if (!w) return null;
     var own = urnOf(w);
     if (own) return own;
     var all = w.querySelectorAll('*');
@@ -94,6 +100,9 @@
     //    wrapper and only the first ever got a button;
     //  - stopping on an <li> styled display:contents, which has no box at all, so the
     //    width check skipped every post.
+    //
+    // This stays the SMALL box (header-level is fine) — it's for button placement, not
+    // text/image. Extraction uses findPostCard(), which climbs further on purpose.
     var node = cm, boxedBest = null;
     for (var i = 0; i < 20 && node; i++) {
       node = node.parentElement;
@@ -106,7 +115,7 @@
     }
     if (boxedBest) return boxedBest;
     var n = cm;
-    for (var j = 0; j < 6 && n.parentElement; j++) n = n.parentElement;
+    for (var j = 0; j < 6 && n && n.parentElement; j++) n = n.parentElement;
     return n;
   }
 
@@ -125,21 +134,108 @@
   }
   // The author's name + headline ("CEO at C-Serv | Helping…") live in the actor block; it
   // must never win as the post text. The real post body is the commentary container.
-  var ACTOR_SEL = '.update-components-actor, .feed-shared-actor';
-  var BODY_SEL = '.update-components-text, .feed-shared-inline-show-more-text, .update-components-update-v2__commentary, .feed-shared-update-v2__description, .feed-shared-text';
+  var ACTOR_SEL = '.update-components-actor, .feed-shared-actor, [data-view-name="feed-actor"]';
+  // Legacy class names PLUS May-2026 SDUI permalink markers. LinkedIn's post-detail rewrite
+  // dropped .update-components-text on /posts/… and /feed/update/… in favor of
+  // [data-testid="expandable-text-box"] and [componentkey^="feed-commentary_"]. Without
+  // those, permalink + Fix-flow extracts returned empty text even when the body was on screen.
+  var BODY_SEL = [
+    '.update-components-text',
+    '.feed-shared-inline-show-more-text',
+    '.update-components-update-v2__commentary',
+    '.feed-shared-update-v2__description',
+    '.feed-shared-text',
+    '.update-components-commentary',
+    '.feed-shared-update-v2__description-wrapper',
+    '[data-testid="expandable-text-box"]',
+    '[data-test-id="expandable-text-box"]',
+    '[componentkey^="feed-commentary_"]'
+  ].join(', ');
   // On a post's detail page (which the "Fix" flow opens) the comments are in the DOM too,
   // and a long comment can beat a short caption. Never treat comment text as the post body.
-  var COMMENT_SEL = '.comments-comment-item, .comments-comment-entity, .comments-comments-list, .comments-comment-texteditor, .comments-comment-social-bar, .feed-shared-update-v2__comments-container, [data-view-name*="comment"]';
+  var COMMENT_SEL = [
+    '.comments-comment-item',
+    '.comments-comment-entity',
+    '.comments-comments-list',
+    '.comments-comment-texteditor',
+    '.comments-comment-social-bar',
+    '.feed-shared-update-v2__comments-container',
+    '[data-view-name*="comment"]',
+    '[componentkey^="replaceableComment_"]'
+  ].join(', ');
+  // Visual post card — innermost match that actually holds commentary/media. Do NOT put
+  // [data-urn]/[data-id] here: those often sit on a header-level box that does not contain
+  // the body (the v1.6.8 postRoot bug). Feed wrappers also use data-id instead of data-urn.
+  var FULL_CARD_SEL = [
+    '.feed-shared-update-v2',
+    'article.feed-shared-update-v2',
+    '[data-view-name="feed-full-update"]',
+    '[data-view-name="feed-single-update"]',
+    '[componentkey$="FeedType_FEED_DETAIL"]',
+    '[data-sdui-screen="com.linkedin.sdui.flagshipnav.feed.UpdateDetail"]',
+    '.occludable-update'
+  ].join(', ');
+  var MEDIA_SEL = [
+    '.update-components-image',
+    '.feed-shared-image',
+    '.update-components-linkedin-video',
+    '.feed-shared-linkedin-video',
+    '.feed-shared-carousel',
+    '.update-components-carousel',
+    '.ivm-image-view-model',
+    '.ivm-view-attr__img-wrapper',
+    '.update-components-article-summary',
+    '.update-components-article',
+    'video',
+    '[data-test-id*="image"]'
+  ].join(', ');
   function inActor(e) { try { return !!(e.closest && e.closest(ACTOR_SEL)); } catch (x) { return false; } }
   function inComments(e) { try { return !!(e.closest && e.closest(COMMENT_SEL)); } catch (x) { return false; } }
+
+  // Comment control menus share the "Open control menu…" prefix. Treating them as post
+  // menus made postRoot stop at the header on permalinks (card contains post menu +
+  // comment menus → "climbed into a second post") — author+link saved, text/image blank.
+  function isPostMenu(cm) {
+    if (!cm || !cm.getAttribute) return false;
+    var lab = cm.getAttribute('aria-label') || '';
+    if (!/^Open control menu/i.test(lab)) return false;
+    if (/comment|message|conversation/i.test(lab)) return false;
+    try { if (inComments(cm)) return false; } catch (e) {}
+    return true;
+  }
+
+  // True when climbing `node` would span a *sibling* feed item. Nested quoted-post menus
+  // (reshare) must NOT trip this — that was another empty-body path: the outer card has
+  // two CMs, we stopped before it, and longestText/findImage ran on the header only.
+  function spansSecondPost(node, cm) {
+    if (!node || !cm) return false;
+    var menus;
+    try { menus = [].slice.call(node.querySelectorAll(CM_SEL)).filter(isPostMenu); }
+    catch (e) { return false; }
+    var ourCard = null;
+    try { ourCard = cm.closest && cm.closest(FULL_CARD_SEL); } catch (e) {}
+    for (var i = 0; i < menus.length; i++) {
+      if (menus[i] === cm) continue;
+      var theirCard = null;
+      try { theirCard = menus[i].closest && menus[i].closest(FULL_CARD_SEL); } catch (e) {}
+      if (ourCard && theirCard && ourCard !== theirCard && ourCard.contains(theirCard)) continue;
+      return true;
+    }
+    return false;
+  }
+
   function longestText(w) {
+    if (!w) return '';
     // 1) Prefer LinkedIn's real post-commentary container (the hook + body); never the actor,
     //    never a comment.
     var body = [].slice.call(w.querySelectorAll(BODY_SEL))
       .filter(function (e) { return !inActor(e) && !inComments(e); })
       .map(function (e) { return stripSocial((e.innerText || e.textContent || '').trim()); })
-      .filter(function (t) { return t.length > 20; });
+      .filter(function (t) { return t.length > 0; });
     body.sort(function (a, b) { return b.length - a.length; });
+    var long = body.filter(function (t) { return t.length > 20; });
+    if (long[0]) return long[0];
+    // Short hooks still count. The old >20 cutoff dropped one-line formats and left Text blank.
     if (body[0]) return body[0];
     // 2) Fallback: longest span/p, but skip the author/header block and the comments, and
     //    strip social-proof so "Jane and 500 others reacted" can never win.
@@ -151,37 +247,137 @@
     return texts[0] || '';
   }
 
+  function isLicdn(u) {
+    return !!u && /licdn\.com|media\./i.test(String(u)) &&
+      !/profile-displayphoto|profile-framedphoto|company-logo|EntityPhoto|\/aero-v1\/|ghost|static\.licdn/i.test(String(u));
+  }
+
+  // srcset lists small→large. Taking the first licdn URL saved a shrink_20 placeholder.
+  // Prefer the widest candidate so the library gets a usable feed image.
+  function pickSrcset(srcset) {
+    var bestU = '', bestW = -1;
+    String(srcset || '').split(',').forEach(function (part) {
+      var bits = part.trim().split(/\s+/);
+      var u = bits[0] || '';
+      if (!isLicdn(u)) return;
+      var w = 0;
+      if (bits[1] && /w$/i.test(bits[1])) w = parseInt(bits[1], 10) || 0;
+      else if (bits[1] && /x$/i.test(bits[1])) w = Math.round((parseFloat(bits[1]) || 0) * 400);
+      else w = 1;
+      if (w >= bestW) { bestW = w; bestU = u; }
+    });
+    return bestU;
+  }
+
+  function imgSrc(im) {
+    if (!im) return '';
+    var cands = [];
+    function add(u) {
+      if (!u) return;
+      u = String(u).trim().replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+      if (isLicdn(u)) cands.push(u);
+    }
+    add(im.currentSrc);
+    add(im.src);
+    // LinkedIn lazy-loads: src stays empty until near the viewport; the real URL is in
+    // data-delayed-url / srcset. Reading only currentSrc/src is why image-posts saved blank.
+    try {
+      add(im.getAttribute('data-delayed-url'));
+      add(im.getAttribute('data-src'));
+      add(im.getAttribute('data-ghost-url'));
+      add(pickSrcset(im.getAttribute('srcset')));
+    } catch (e) {}
+    var feed = '';
+    for (var i = 0; i < cands.length; i++) {
+      if (/feedshare|dms\/image|image\/v2|image\/upload|article-cover/i.test(cands[i])) feed = cands[i];
+    }
+    return feed || cands[cands.length - 1] || cands[0] || '';
+  }
+
   // The post's main image. Classes are hashed, so we score every <img>: keep LinkedIn
   // media, drop avatars/logos/tiny icons, and take the largest (boosting real feedshare
-  // images). currentSrc picks the resolved srcset entry.
+  // images). Also video posters + CSS background-image (used on some carousels / articles).
   function findImage(w) {
+    if (!w) return '';
     var best = '', bestScore = 0;
-    [].slice.call(w.querySelectorAll('img')).forEach(function (im) {
-      if (inComments(im)) return;   // ignore images inside the comments section
-      // Resolve the real URL even before the image has decoded. currentSrc/src first; if
-      // those are still a lazy placeholder, pull the licdn URL out of srcset (LinkedIn sets
-      // srcset immediately even though naturalWidth stays 0 until the image actually loads).
-      var src = im.currentSrc || im.src || '';
-      if (!/licdn\.com|media\./i.test(src)) {
-        var mm = (im.getAttribute('srcset') || '').match(/https?:\/\/[^\s"']*(?:licdn\.com|media\.)[^\s"']*/i);
-        if (mm) src = mm[0];
-      }
-      if (!/licdn\.com|media\./i.test(src)) return;
-      if (/profile-displayphoto|profile-framedphoto|company-logo|EntityPhoto|\/aero-v1\/|ghost|static\.licdn/i.test(src)) return;
-      var r = im.getBoundingClientRect();
-      var area = (im.naturalWidth * im.naturalHeight) || (r.width * r.height);
+    function consider(src, el) {
+      if (!isLicdn(src)) return;
+      var r = { width: 0, height: 0 };
+      try { if (el && el.getBoundingClientRect) r = el.getBoundingClientRect(); } catch (e) {}
+      var nw = (el && el.naturalWidth) || 0;
+      var nh = (el && el.naturalHeight) || 0;
+      var area = (nw * nh) || (r.width * r.height);
       var isFeed = /feedshare|dms\/image|image\/v2|image\/upload|article-cover/i.test(src);
-      if ((r.width < 120 || r.height < 120) && !isFeed) return;   // skip small chrome/avatars
+      if ((r.width < 120 || r.height < 120) && !isFeed && area < 14400) return;
       var score = area * (isFeed ? 3 : 1);
-      if (!score && isFeed) score = 1;   // feedshare image is present but hasn't decoded yet — capture it anyway
+      if (!score && isFeed) score = 1;   // feedshare present but not decoded yet — still capture
       if (score > bestScore) { bestScore = score; best = src; }
+    }
+    [].slice.call(w.querySelectorAll('img')).forEach(function (im) {
+      if (inComments(im) || inActor(im)) return;   // comments + actor avatars
+      consider(imgSrc(im), im);
+    });
+    [].slice.call(w.querySelectorAll('video')).forEach(function (v) {
+      if (inComments(v)) return;
+      consider((v.getAttribute && v.getAttribute('poster')) || v.poster || '', v);
+    });
+    [].slice.call(w.querySelectorAll('source[srcset]')).forEach(function (s) {
+      if (inComments(s)) return;
+      consider(pickSrcset(s.getAttribute('srcset')), s);
+    });
+    [].slice.call(w.querySelectorAll('[style*="background-image"]')).forEach(function (el) {
+      if (inComments(el) || inActor(el)) return;
+      var m = ((el.getAttribute && el.getAttribute('style')) || '').match(/url\(["']?(https?:\/\/[^"')]+)["']?\)/i);
+      if (m) consider(m[1], el);
     });
     return best;
+  }
+
+  function hasMediaHint(root) {
+    if (!root) return false;
+    try {
+      var hits = root.querySelectorAll(MEDIA_SEL);
+      for (var i = 0; i < hits.length; i++) {
+        if (!inComments(hits[i]) && !inActor(hits[i])) return true;
+      }
+    } catch (e) {}
+    var imgs = root.querySelectorAll('img');
+    for (var j = 0; j < imgs.length; j++) {
+      if (inComments(imgs[j]) || inActor(imgs[j])) continue;
+      if (imgSrc(imgs[j])) return true;
+    }
+    return false;
+  }
+
+  function commentaryLooksPending(root) {
+    if (!root) return true;
+    var boxes = [];
+    try { boxes = root.querySelectorAll(BODY_SEL); } catch (e) { return true; }
+    var sawText = false, sawEmpty = false;
+    for (var i = 0; i < boxes.length; i++) {
+      if (inActor(boxes[i]) || inComments(boxes[i])) continue;
+      var t = stripSocial((boxes[i].innerText || boxes[i].textContent || '').trim());
+      if (t.length > 0) sawText = true;
+      else sawEmpty = true;
+    }
+    if (sawText) return false;
+    return sawEmpty || boxes.length === 0;
+  }
+
+  function cardHasContent(node) {
+    if (!node) return false;
+    var boxes = [];
+    try { boxes = node.querySelectorAll(BODY_SEL); } catch (e) {}
+    for (var i = 0; i < boxes.length; i++) {
+      if (!inActor(boxes[i]) && !inComments(boxes[i])) return true;
+    }
+    return hasMediaHint(node);
   }
 
   // Best-effort social proof — via aria-labels first (e.g. "1,234 reactions"), which
   // survive class hashing better than text nodes. Blank when not found; the viewer copes.
   function matchCount(w, word) {
+    if (!w) return '';
     var re = new RegExp('([\\d,\\.]+)\\s*' + word, 'i');
     var nodes = [].slice.call(w.querySelectorAll('[aria-label]'));
     for (var i = 0; i < nodes.length; i++) {
@@ -196,7 +392,74 @@
     return '';
   }
 
+  var AUTHOR_BLOCKLIST = /^(premium|following|connect|follow|message|pending|linkedin)$/i;
+  function cleanAuthor(t) {
+    t = String(t || '').trim().split('\n')[0].trim();
+    t = t.replace(/\s*[•·].*$/, '').replace(/\s+Premium\s*$/i, '').trim();
+    if (!t || t.length > 80 || AUTHOR_BLOCKLIST.test(t)) return '';
+    return t;
+  }
 
+  function authorFromMenu(cm) {
+    var raw = (cm && cm.getAttribute && cm.getAttribute('aria-label')) || '';
+    var m = raw.match(/post by\s+(.+?)\s*$/i);
+    return m ? cleanAuthor(m[1]) : '';
+  }
+
+  // Read the actor name from the card. Never the headline, never the first /in/ link on
+  // the page (permalinks have a Premium upsell pointing at the *current* user).
+  function authorFromDom(root) {
+    if (!root) return '';
+    var actor = null;
+    var actors = [];
+    try { actors = [].slice.call(root.querySelectorAll(ACTOR_SEL)); } catch (e) {}
+    for (var i = 0; i < actors.length; i++) {
+      if (!inComments(actors[i])) { actor = actors[i]; break; }
+    }
+    var scope = actor || root;
+    var sels = [
+      '.update-components-actor__title span[aria-hidden="true"]',
+      '.update-components-actor__name span[aria-hidden="true"]',
+      '.update-components-actor__title',
+      '.update-components-actor__name',
+      '.feed-shared-actor__name'
+    ];
+    for (var s = 0; s < sels.length; s++) {
+      var el = null;
+      try { el = (actor || scope).querySelector(sels[s]); } catch (e) {}
+      var t = cleanAuthor(el && (el.innerText || el.textContent));
+      if (t) return t;
+    }
+    if (actor) {
+      var a = null;
+      try { a = actor.querySelector('a[href*="/in/"] span[aria-hidden="true"], a[href*="/company/"] span[aria-hidden="true"]'); } catch (e) {}
+      var t2 = cleanAuthor(a && (a.innerText || a.textContent));
+      if (t2) return t2;
+    }
+    return '';
+  }
+
+  function postIdFromString(s) {
+    var m = String(s || '').match(/(\d{15,})/);
+    return m ? m[1] : '';
+  }
+
+  function isPermalinkPath(path) {
+    path = path || (location.pathname || '');
+    return /\/feed\/update\//.test(path) || /\/posts\//.test(path) || /\/pulse\//.test(path);
+  }
+
+  // On a permalink (activity OR ugcPost) the URL itself is the post. Don't use this on
+  // /feed/ — that would stamp every save with the feed URL.
+  function permalinkLink() {
+    if (!isPermalinkPath()) return '';
+    var href = location.href || '';
+    var urn = href.match(URN_RE);
+    if (urn) return 'https://www.linkedin.com/feed/update/' + urn[0] + '/';
+    var slug = href.match(/\/posts\/[^?#]+/i);
+    if (slug) return 'https://www.linkedin.com' + slug[0].replace(/\/$/, '');
+    return '';
+  }
 
   // Capture the post so the library can render it exactly like the LinkedIn feed:
   // link, full text, main image, and social counts. Read at ➕-click while the node is fresh.
@@ -209,23 +472,144 @@
     var node = cm, best = null;
     for (var i = 0; i < 24 && node && node.parentElement; i++) {
       node = node.parentElement;
-      if (node.querySelectorAll(CM_SEL).length > 1) break;   // climbed into a second post — too far
+      if (spansSecondPost(node, cm)) break;   // sibling post — too far (quoted menus ignored)
       var r = node.getBoundingClientRect();
       if (r.width > 0 && r.height > 0) best = node;           // keep the widest single-post box
     }
     return best || cm;
   }
+
+  // Prefer a semantic card (feed-shared-update-v2 / SDUI detail) that actually contains
+  // commentary or media. Fall back to postRoot's widest-box walk.
+  function findPostCard(cm) {
+    if (!cm) return cm;
+    var node = cm;
+    var fulls = [];
+    var widest = null;
+    for (var i = 0; i < 24 && node && node.parentElement; i++) {
+      node = node.parentElement;
+      if (spansSecondPost(node, cm)) break;
+      var r = node.getBoundingClientRect();
+      if (!(r.width > 0 && r.height > 0)) continue;
+      widest = node;
+      try { if (node.matches && node.matches(FULL_CARD_SEL)) fulls.push(node); } catch (e) {}
+    }
+    for (var f = 0; f < fulls.length; f++) {
+      if (cardHasContent(fulls[f])) return fulls[f];
+    }
+    if (fulls[0]) return fulls[0];
+    return widest || postRoot(cm) || cm;
+  }
+
   function extract(cm) {
+    cm = reliveCm(cm);
     var w = findWrapper(cm);
-    var root = postRoot(cm);
-    var urn = scanUrn(w) || scanUrn(root);
+    var root = findPostCard(cm);
+    var urn = scanUrn(root) || scanUrn(w);
+    var author = authorFromDom(root) || authorFromDom(w) || authorFromMenu(cm);
     return {
-      link: urn ? 'https://www.linkedin.com/feed/update/' + urn + '/' : '',
+      link: urn ? 'https://www.linkedin.com/feed/update/' + urn + '/' : permalinkLink(),
       text: longestText(root) || longestText(w),
       image: findImage(root) || findImage(w),
+      author: author,
       reactions: matchCount(root, 'reactions?') || matchCount(w, 'reactions?'),
       comments: matchCount(root, 'comments?') || matchCount(w, 'comments?')
     };
+  }
+
+  // Copy-link / SPA re-render can detach the original … button. Re-find the live menu
+  // by activity id (works for activity, share, AND ugcPost URLs).
+  function reliveCm(cm, hint) {
+    try {
+      if (cm && cm.isConnected && isPostMenu(cm)) return cm;
+    } catch (e) {}
+    var pid = postIdFromString(hint || '') ||
+      postIdFromString((cm && scanUrn(cm)) || '') ||
+      (isPermalinkPath() ? postIdFromString(location.href) : '');
+    var menus = [];
+    try { menus = [].slice.call(document.querySelectorAll(CM_SEL)).filter(isPostMenu); } catch (e) {}
+    if (pid) {
+      for (var i = 0; i < menus.length; i++) {
+        var u = scanUrn(findPostCard(menus[i])) || scanUrn(findWrapper(menus[i]));
+        if (u && u.indexOf(pid) !== -1) return menus[i];
+      }
+    }
+    return menus[0] || cm;
+  }
+
+  function mergeCapture(a, b) {
+    a = a || {}; b = b || {};
+    return {
+      link: b.link || a.link || '',
+      text: b.text || a.text || '',
+      image: b.image || a.image || '',
+      author: b.author || a.author || '',
+      reactions: b.reactions || a.reactions || '',
+      comments: b.comments || a.comments || ''
+    };
+  }
+
+  function captureScore(d) {
+    d = d || {};
+    return (d.text ? 2 : 0) + (d.image ? 2 : 0) + (d.author ? 1 : 0) + (d.link ? 1 : 0);
+  }
+
+  function captureGaps(d, root) {
+    d = d || {};
+    var missing = [];
+    if (!String(d.author || '').trim()) missing.push('author');
+    if (!String(d.text || '').trim()) missing.push('text');
+    // Image is only a gap when the card looks like it HAS media. Text-only posts are complete.
+    if (!String(d.image || '').trim() && hasMediaHint(root)) missing.push('image');
+    return missing;
+  }
+
+  function isNearEmpty(d) {
+    d = d || {};
+    return !String(d.text || '').trim() && !String(d.image || '').trim();
+  }
+
+  // Expand the post's own "see more" (never comments) so we save the full body, not the fold.
+  function expandSeeMore(cm) {
+    var root = findPostCard(cm);
+    if (!root) return;
+    var nodes = [];
+    try { nodes = root.querySelectorAll('button, span[role="button"], [aria-expanded="false"]'); } catch (e) { return; }
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      if (inComments(n) || inActor(n)) continue;
+      var t = (n.innerText || n.textContent || '').replace(/\s+/g, ' ').trim();
+      if (/^(see more|see more…|…more|\.\.\.more|more)$/i.test(t) || (/see more/i.test(t) && t.length < 24)) {
+        try { n.click(); } catch (e) {}
+      }
+    }
+  }
+
+  // Commentary and licdn images often arrive a tick after the … menu (lazy img, SPA).
+  // Retry briefly before giving up so first-save isn't a silent half-entry.
+  function waitAndRefine(cm, cb, opts) {
+    var started = Date.now();
+    var maxMs = (opts && opts.maxMs) || 2000;
+    var best = extract(cm);
+    function tick() {
+      if (!alive()) { cb(best); return; }
+      cm = reliveCm(cm, best && best.link);
+      expandSeeMore(cm);
+      var d = extract(cm);
+      if (captureScore(d) >= captureScore(best)) best = d;
+      if (overlay && overlay._sfApply) overlay._sfApply(best, best.link, true);
+      var root = findPostCard(cm);
+      var gaps = captureGaps(best, root);
+      var pending = gaps.indexOf('image') !== -1 ||
+        (gaps.indexOf('text') !== -1 && commentaryLooksPending(root));
+      if (!pending || Date.now() - started >= maxMs) {
+        if (overlay && overlay._sfApply) overlay._sfApply(best, best.link, false);
+        cb(best);
+        return;
+      }
+      setTimeout(tick, 160);
+    }
+    setTimeout(tick, 120);
   }
 
   function escapeHtml(s) {
@@ -242,6 +626,8 @@
 
   // Reliable link when the URN isn't in the DOM: open "…" → Copy link to post →
   // read the canonical /posts/…-activity-<id> URL from the confirmation toast.
+  // Caller MUST re-extract after this — the menu dance re-renders the card and the
+  // snapshot taken beforehand is often still empty (the link-only half-entry path).
   function captureLinkViaMenu(cm, cb) {
     var done = false;
     function finish(link) { if (done) return; done = true; closeMenu(); cb(link || ''); }
@@ -301,18 +687,61 @@
   // ---------- the save form ----------
   var overlay = null;
 
-  function openForm(cm, author) {
-    if (overlay) return;
-    var d = extract(cm);
-    // Resolve the post link NOW, while the control-menu reference is fresh. The feed
-    // re-renders over time, so capturing at save-time can hit a stale/detached node and
-    // silently fail. Capture up front, then show the form with the link already in hand.
-    if (d.link) {
-      showForm(cm, author, d, d.link);
-    } else {
-      toast('Reading post link…');
-      captureLinkViaMenu(cm, function (link) { showForm(cm, author, d, link); });
+  function renderCaptureStatus(el, d, root, refining) {
+    if (!el) return;
+    var gaps = captureGaps(d, root);
+    var near = isNearEmpty(d);
+    el.className = 'sf-capture' + ((near || gaps.length) ? ' warn' : ' ok');
+    if (refining && (gaps.length || near)) {
+      el.textContent = 'Still reading the post' + (gaps.length ? ' (' + gaps.join(', ') + ')' : '') + '…';
+      return;
     }
+    if (near) {
+      el.textContent = 'Missing post text and image. Wait a moment (or open the permalink) before saving — a near-empty save will ask you to confirm.';
+      return;
+    }
+    if (gaps.length) {
+      el.textContent = 'Captured with gaps: ' + gaps.join(', ') + '. Text-only posts are fine; if you can see the missing field on LinkedIn, wait a beat before saving.';
+      return;
+    }
+    el.textContent = d.image
+      ? 'Captured author, text, and image.'
+      : 'Captured author and text (no image on this post).';
+  }
+
+  function openForm(cm, authorHint) {
+    if (overlay) return;
+    cm = reliveCm(cm);
+    expandSeeMore(cm);
+    var d = extract(cm);
+    d.author = d.author || authorHint || '';
+
+    function present(link) {
+      if (overlay) return;
+      d.link = link || d.link || '';
+      showForm(cm, d.author, d, d.link);
+      // Keep trying while the form is open — lazy images / SDUI commentary often land
+      // in the next 1–2s. Updates the status line; does not overwrite a typed name.
+      waitAndRefine(cm, function (next) {
+        if (overlay && overlay._sfApply) overlay._sfApply(next, next.link, false);
+      }, { maxMs: 2200 });
+    }
+
+    if (d.link) {
+      present(d.link);
+      return;
+    }
+    // Link-only path: URN missing from the feed DOM. Do NOT show the form with the
+    // pre-menu snapshot — that snapshot is why we saved link+funnel and nothing else.
+    toast('Reading post link…');
+    captureLinkViaMenu(cm, function (link) {
+      cm = reliveCm(cm, link);
+      expandSeeMore(cm);
+      var again = extract(cm);
+      d = mergeCapture(d, again);
+      d.author = d.author || authorFromMenu(cm) || authorHint || '';
+      present(link || d.link || permalinkLink());
+    });
   }
 
   function showForm(cm, author, d, resolvedLink) {
@@ -352,6 +781,7 @@
         '</div>' +
         '<label>Note</label>' +
         '<textarea class="sf-note" placeholder="e.g. great one for Arceus — strong hook"></textarea>' +
+        '<div class="sf-capture" id="sfCapture"></div>' +
         '<div class="sf-actions">' +
           '<button type="button" class="sf-cancel">Cancel</button>' +
           '<button type="button" class="sf-save" disabled>Save</button>' +
@@ -361,6 +791,35 @@
 
     var saveBtn = overlay.querySelector('.sf-save');
     var labelsWrap = overlay.querySelector('#sfLabels');
+    var sub = overlay.querySelector('.sf-sub');
+    var linkInput = overlay.querySelector('.sf-link');
+    var nameInput = overlay.querySelector('.sf-name');
+    var captureEl = overlay.querySelector('#sfCapture');
+    var nameTouched = false;
+    nameInput.addEventListener('input', function () { nameTouched = true; });
+
+    function applyCapture(next, link, refining) {
+      d = mergeCapture(d, next);
+      if (link) { d.link = link; resolvedLink = link; }
+      if (d.author) author = d.author;
+      if (sub) sub.textContent = (author ? 'From ' + author : 'LinkedIn post') + ' → your Format Library';
+      if (linkInput && d.link && !String(linkInput.value || '').trim()) {
+        linkInput.value = d.link;
+        linkInput.style.borderColor = '';
+        linkInput.style.background = '';
+      }
+      if (!nameTouched && d.text) {
+        var guess = (d.text || '').split('\n').map(function (s) { return s.trim(); }).filter(Boolean)[0] || '';
+        guess = guess.slice(0, 80);
+        if (!nameInput.value || nameInput.value === nameGuess) {
+          nameGuess = guess;
+          nameInput.value = guess;
+        }
+      }
+      renderCaptureStatus(captureEl, d, findPostCard(cm), refining);
+    }
+    overlay._sfApply = applyCapture;
+    renderCaptureStatus(captureEl, d, findPostCard(cm), isNearEmpty(d) || captureGaps(d, findPostCard(cm)).length > 0);
 
     function renderChips(labels) {
       if (!labels || !labels.length) {
@@ -452,10 +911,28 @@
         return;
       }
 
+      // Last-chance extract: images/text may have painted while the form was open.
+      cm = reliveCm(cm, link);
+      expandSeeMore(cm);
+      d = mergeCapture(d, extract(cm));
+      if (d.author) author = d.author;
+      applyCapture(d, link, false);
+
+      if (isNearEmpty(d)) {
+        var go = window.confirm(
+          'This save is missing the post text and image. LinkedIn may still be loading them.\n\nSave a near-empty entry anyway?'
+        );
+        if (!go) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Save';
+          return;
+        }
+      }
+
       var payload = {
         tab: 'marghi', formatType: name, funnel: stage, link: link,
         note: note, labels: labels,
-        author: author || '', text: d.text || '', image: d.image || '',
+        author: author || d.author || '', text: d.text || '', image: d.image || '',
         reactions: d.reactions || '', comments: d.comments || ''
       };
       var settled = false;
@@ -496,7 +973,7 @@
     t.className = 'sf-toast';
     t.textContent = m;
     document.body.appendChild(t);
-    setTimeout(function () { t.remove(); }, 2600);
+    setTimeout(function () { t.remove(); }, 3200);
   }
 
   // ---------- inject the button on each post ----------
@@ -520,6 +997,7 @@
     if (!alive()) { if (DEBUG) console.log('%c[MyFormats] stood down (superseded or context dead)', 'color:#b8412d'); standDown(); return; }
     [].slice.call(document.querySelectorAll(CM_SEL)).forEach(function (cm) {
       try {
+      if (!isPostMenu(cm)) return;   // skip comment / message menus
       var wrapper = findWrapper(cm);
       if (!wrapper) return;
       var existing = wrapper.querySelector(':scope > .sf-btn');
@@ -530,7 +1008,6 @@
       var top = (cr.top - wr.top + cr.height / 2) + 'px';
       var right = (wr.right - cr.left + 6) + 'px';
       if (existing) { existing.style.top = top; existing.style.right = right; existing.style.transform = 'translateY(-50%)'; return; }
-      var author = (cm.getAttribute('aria-label') || '').replace(/^Open control menu for post by\s*/i, '').trim();
       var btn = document.createElement('button');
       btn.className = 'sf-btn';
       btn.type = 'button';
@@ -541,7 +1018,10 @@
       btn.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
-        openForm(cm, author);
+        // Re-read author at click time (not inject time) — the aria-label can fill in late.
+        var live = reliveCm(cm);
+        var author = authorFromDom(findPostCard(live)) || authorFromMenu(live);
+        openForm(live, author);
       });
       if (getComputedStyle(wrapper).position === 'static') wrapper.style.position = 'relative';
       wrapper.appendChild(btn);
@@ -554,7 +1034,6 @@
     debugLog();
   }
 
-  var mo = null;
   var pending = null;
   function schedule(delay) {
     if (pending) return;
@@ -609,20 +1088,77 @@
 
   burst();
 
+  function pickFixMenu() {
+    // Match the permalink's activity/ugcPost id so we don't auto-open a sidebar /
+    // "more posts" card. Fall back to the first visible post menu (never a comment).
+    var pid = postIdFromString(location.href);
+    var menus = [];
+    try {
+      menus = [].slice.call(document.querySelectorAll(CM_SEL)).filter(function (cm) {
+        if (!isPostMenu(cm)) return false;
+        var r = cm.getBoundingClientRect();
+        return r.width > 0 && r.height > 0;
+      });
+    } catch (e) {}
+    if (pid) {
+      for (var i = 0; i < menus.length; i++) {
+        var u = scanUrn(findPostCard(menus[i])) || scanUrn(findWrapper(menus[i]));
+        if (u && u.indexOf(pid) !== -1) return menus[i];
+      }
+    }
+    return menus[0] || null;
+  }
+
   // Opened from the library's "Fix" button → auto-open the save form for this post so the
   // user just reviews and hits Save. The save matches the post by its activity id and
   // updates the existing (wrong/incomplete) row in place.
+  //
+  // Wait until the opened permalink has painted commentary/image (or ~2.5s) so re-extract
+  // is from the live post page, not the empty SPA shell. querySelector(CM_SEL) used to
+  // fire on the first menu — often a comment — and extract() ran once, empty.
   if (SF_FIX_REQUESTED) {
     try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}   // don't re-trigger on refresh
     var fxTries = 0;
     var fxIv = setInterval(function () {
       if (!alive()) { clearInterval(fxIv); return; }
-      var cm = document.querySelector(CM_SEL);
-      if (cm) {
+      var cm = pickFixMenu();
+      if (!cm) {
+        if (++fxTries >= 80) clearInterval(fxIv);   // ~20s, then give up (user can click + manually)
+        return;
+      }
+      var snap = extract(cm);
+      var painted = !!(snap.text || snap.image);
+      var waited = fxTries >= 10;                  // ~2.5s after the menu exists
+      if (painted || waited || fxTries >= 24) {    // hard cap ~6s after menu
         clearInterval(fxIv);
-        var author = (cm.getAttribute('aria-label') || '').replace(/^Open control menu for post by\s*/i, '').trim();
-        try { openForm(cm, author); } catch (e) {}
-      } else if (++fxTries >= 60) { clearInterval(fxIv); }   // ~15s, then give up (user can click + manually)
+        try { openForm(cm, snap.author || authorFromMenu(cm)); } catch (e) {}
+      }
+      fxTries++;
     }, 250);
   }
+
+  // Test hook (unused in the extension). Lets a node/jsdom harness call extract()
+  // against LinkedIn-shaped fixtures without poking private IIFE locals.
+  try {
+    window.__SF_CAPTURE = {
+      extract: extract,
+      findImage: findImage,
+      longestText: longestText,
+      findPostCard: findPostCard,
+      postRoot: postRoot,
+      authorFromDom: authorFromDom,
+      authorFromMenu: authorFromMenu,
+      imgSrc: imgSrc,
+      pickSrcset: pickSrcset,
+      captureGaps: captureGaps,
+      isNearEmpty: isNearEmpty,
+      isPostMenu: isPostMenu,
+      spansSecondPost: spansSecondPost,
+      permalinkLink: permalinkLink,
+      postIdFromString: postIdFromString,
+      mergeCapture: mergeCapture,
+      cleanAuthor: cleanAuthor,
+      URN_RE: URN_RE
+    };
+  } catch (e) {}
 })();

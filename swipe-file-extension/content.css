@@ -27,11 +27,11 @@
 .sf-sub { margin: 0 0 4px; font-size: 12px; color: #8A8A86; }
 .sf-card label { display: block; font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: #9A8F70; margin: 18px 0 7px; }
-.sf-name, .sf-note {
+.sf-name, .sf-note, .sf-link {
   width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #D8CDB2; border-radius: 10px;
   font-size: 14px; font-family: inherit; background: #FFFDF8; color: #1B1B18;
 }
-.sf-name:focus, .sf-note:focus { outline: none; border-color: #D5B473; box-shadow: 0 0 0 3px rgba(213,180,115,.22); }
+.sf-name:focus, .sf-note:focus, .sf-link:focus { outline: none; border-color: #D5B473; box-shadow: 0 0 0 3px rgba(213,180,115,.22); }
 .sf-note { resize: vertical; min-height: 56px; line-height: 1.45; }
 
 /* funnel stage */
@@ -59,6 +59,13 @@
 .sf-newlabel-add:hover { opacity: .92; }
 
 .sf-preview { font-size: 12px; color: #565349; background: #F4EDD9; border: 1px solid #E7DEC8; border-radius: 10px; padding: 9px 11px; margin-top: 12px; max-height: 84px; overflow: auto; white-space: pre-wrap; }
+.sf-capture {
+  margin-top: 12px; padding: 9px 11px; border-radius: 10px;
+  font-size: 12px; line-height: 1.45; background: #F4EDD9;
+  border: 1px solid #E7DEC8; color: #565349;
+}
+.sf-capture.warn { background: #fff6f4; border-color: #e8b4ab; color: #7a2e22; }
+.sf-capture.ok { background: #eef6ea; border-color: #c3d9b8; color: #2d4a22; }
 .sf-actions { display: flex; gap: 8px; margin-top: 18px; }
 .sf-actions button { flex: 1; padding: 11px; border-radius: 10px; border: 0; font-weight: 700; font-size: 14px; cursor: pointer; }
 .sf-save { background: #1B1B18; color: #FFF9ED; }
