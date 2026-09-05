@@ -26,7 +26,7 @@
   } catch (e) {}
   try { if (window.__SF_ACTIVE && window.__SF_ACTIVE.standDown) window.__SF_ACTIVE.standDown(); } catch (e) {}
 
-  console.log('%c[MyFormats] content script v1.8.2 loaded', 'color:#0a66c2;font-weight:bold');
+  console.log('%c[MyFormats] content script v1.8.3 loaded', 'color:#0a66c2;font-weight:bold');
 
   var timers = [];
   var mo = null;
@@ -127,19 +127,24 @@
   // must never win as the post text. The real post body is the commentary container.
   var ACTOR_SEL = '.update-components-actor, .feed-shared-actor';
   var BODY_SEL = '.update-components-text, .feed-shared-inline-show-more-text, .update-components-update-v2__commentary, .feed-shared-update-v2__description, .feed-shared-text';
+  // On a post's detail page (which the "Fix" flow opens) the comments are in the DOM too,
+  // and a long comment can beat a short caption. Never treat comment text as the post body.
+  var COMMENT_SEL = '.comments-comment-item, .comments-comment-entity, .comments-comments-list, .comments-comment-texteditor, .comments-comment-social-bar, .feed-shared-update-v2__comments-container, [data-view-name*="comment"]';
   function inActor(e) { try { return !!(e.closest && e.closest(ACTOR_SEL)); } catch (x) { return false; } }
+  function inComments(e) { try { return !!(e.closest && e.closest(COMMENT_SEL)); } catch (x) { return false; } }
   function longestText(w) {
-    // 1) Prefer LinkedIn's real post-commentary container (the hook + body), never the actor.
+    // 1) Prefer LinkedIn's real post-commentary container (the hook + body); never the actor,
+    //    never a comment.
     var body = [].slice.call(w.querySelectorAll(BODY_SEL))
-      .filter(function (e) { return !inActor(e); })
+      .filter(function (e) { return !inActor(e) && !inComments(e); })
       .map(function (e) { return stripSocial((e.innerText || e.textContent || '').trim()); })
       .filter(function (t) { return t.length > 20; });
     body.sort(function (a, b) { return b.length - a.length; });
     if (body[0]) return body[0];
-    // 2) Fallback: longest span/p, but skip anything inside the author/header block, and
+    // 2) Fallback: longest span/p, but skip the author/header block and the comments, and
     //    strip social-proof so "Jane and 500 others reacted" can never win.
     var texts = [].slice.call(w.querySelectorAll('span[dir="ltr"], p'))
-      .filter(function (e) { return !inActor(e); })
+      .filter(function (e) { return !inActor(e) && !inComments(e); })
       .map(function (e) { return stripSocial((e.innerText || '').trim()); })
       .filter(function (t) { return t.length > 40; });
     texts.sort(function (a, b) { return b.length - a.length; });
@@ -152,6 +157,7 @@
   function findImage(w) {
     var best = '', bestScore = 0;
     [].slice.call(w.querySelectorAll('img')).forEach(function (im) {
+      if (inComments(im)) return;   // ignore images inside the comments section
       // Resolve the real URL even before the image has decoded. currentSrc/src first; if
       // those are still a lazy placeholder, pull the licdn URL out of srcset (LinkedIn sets
       // srcset immediately even though naturalWidth stays 0 until the image actually loads).
